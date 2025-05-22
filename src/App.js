@@ -162,7 +162,7 @@ const App = () => {
       </div>
       <div className="chat-body">
         {messages.map((msg, index) => (
-          <div key={index} className={message ${msg.sender}}>
+          <div key={index} className={`message ${msg.sender}`}>
             {msg.sender === 'user' ? (
               <div className="user-message">{msg.text}</div>
             ) : msg.locations ? (
@@ -268,7 +268,7 @@ const App = () => {
                       ))}
                     </div>
                     <Typist
-                      key={${index}-question}
+                      key={`${index}-question`}
                       avgTypingDelay={20}
                       stdTypingDelay={10}
                       cursor={{ show: false }}
