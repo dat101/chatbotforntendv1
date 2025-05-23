@@ -1,45 +1,37 @@
-/**
- * File: src/App.js
- * Mục đích: Giao diện và xử lý tin nhắn của chatbot
- * Phiên bản: 0.1.5
- * Ngày cập nhật: 2025-05-17
- * Lý do nâng cấp:
- * - Khắc phục lỗi hiệu ứng gõ chữ lặp lại của react-typist cho các tin nhắn cũ.
- * - Tối ưu hóa xử lý lỗi và kết nối với backend.
- * - Giữ react-typist và React 16.14.0 để tương thích với cấu hình hiện tại.
- * Mục đích thay đổi:
- * - Cải thiện trải nghiệm người dùng với hiệu ứng gõ chữ chỉ cho tin nhắn mới nhất.
- * - Đảm bảo triển khai trên Vercel với backend tại https://chatbot-backend-1-ja1c.onrender.com.
- */
-
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import Typist from 'react-typist';
-import { debounce } from 'lodash';
-import './App.css';
+
+// Fallback debounce nếu không có lodash
+const debounce = (func, wait) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
 
 const App = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId, setSessionId] = useState(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const messagesEndRef = useRef(null);
+  const [typingStates, setTypingStates] = useState({});
+  const [allUserQuestions, setAllUserQuestions] = useState([]);
 
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000/api/chat';
+  const backendUrl = 'https://chatbot-backend-1-ja1c.onrender.com/api/chat';
 
   const generateSessionId = () => {
     return 'sess_' + Date.now().toString(36) + Math.random().toString(36).substr(2);
   };
 
   useEffect(() => {
-    const storedSessionId = localStorage.getItem('sessionId');
-    if (storedSessionId) {
-      setSessionId(storedSessionId);
-    } else {
-      const newSessionId = generateSessionId();
-      setSessionId(newSessionId);
-      localStorage.setItem('sessionId', newSessionId);
-    }
+    const newSessionId = generateSessionId();
+    setSessionId(newSessionId);
+  }, []);
+
+  useEffect(() => {
+    return () => sendMessage.cancel();
   }, []);
 
   const scrollToBottom = () => {
@@ -49,6 +41,23 @@ const App = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const getPreviousUserQuestions = () => {
+    console.log('allUserQuestions:', allUserQuestions);
+    const recentQuestions = allUserQuestions.slice(-6).reverse();
+    const truncatedMessages = recentQuestions
+      .map((text, index) => ({
+        original: text,
+        truncated: text.length > 20 ? text.substring(0, 17) + '...' : text,
+        index
+      }))
+      .filter((item, index, self) => 
+        self.findIndex(t => t.original === item.original) === index
+      )
+      .map(item => item.truncated);
+    console.log('truncatedMessages:', truncatedMessages);
+    return truncatedMessages;
+  };
 
   const parseResponse = (responseText) => {
     const lines = responseText.split('\n');
@@ -79,7 +88,6 @@ const App = () => {
         } else if (line.startsWith('AI Menu:')) {
           currentLocation.aiMenuLink = line.replace('AI Menu:', '').trim();
         } else if (line.startsWith('Điểm nổi bật:')) {
-          // Start of highlights list
         } else if (line.startsWith('-')) {
           currentLocation.highlights.push(line.replace('-', '').trim());
         }
@@ -93,48 +101,89 @@ const App = () => {
     return locations;
   };
 
+  const TypewriterText = ({ text, onComplete, delay = 30 }) => {
+    const [displayText, setDisplayText] = useState('');
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+      if (currentIndex < text.length) {
+        const timer = setTimeout(() => {
+          setDisplayText(prev => prev + text[currentIndex]);
+          setCurrentIndex(prev => prev + 1);
+        }, delay);
+        return () => clearTimeout(timer);
+      } else if (onComplete) {
+        onComplete();
+      }
+    }, [currentIndex, text, delay, onComplete]);
+
+    return <span>{displayText}</span>;
+  };
+
   const sendMessage = debounce(async (message, retries = 3) => {
-    if (!message.trim() || isTyping) return;
+    if (!message.trim() || isTyping || !sessionId) {
+      if (!sessionId) {
+        setSessionId(generateSessionId());
+      }
+      return;
+    }
 
     const cleanMessage = message.replace(/[\n\t\r]/g, ' ').trim();
-    setMessages((prev) => [...prev, { text: cleanMessage, sender: 'user' }]);
+    const limitedMessage = cleanMessage.length > 500 ? cleanMessage.substring(0, 500) + '...' : cleanMessage;
+
+    setAllUserQuestions(prev => {
+      const updated = [...prev, limitedMessage];
+      return updated.slice(-20);
+    });
+
+    const newMessage = { text: limitedMessage, sender: 'user', id: Date.now() };
+    setMessages((prev) => [...prev, newMessage]);
+
     setInput('');
     setIsTyping(true);
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        const response = await axios.post(backendUrl, {
-          message: cleanMessage,
-          userId: 'user1',
-          sessionId: sessionId
-        }, {
+        const response = await fetch(backendUrl, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          timeout: 10000 // 10-second timeout
+          body: JSON.stringify({
+            message: limitedMessage,
+            userId: 'user1',
+            sessionId: sessionId
+          })
         });
 
-        const responseText = response.data.response;
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const responseText = data.response || '';
+        const botMessageId = Date.now() + 1;
+
         if (responseText.includes('Tìm thấy')) {
           const locations = parseResponse(responseText);
-          setMessages((prev) => [...prev, { locations, sender: 'bot', isTyped: false }]);
+          setMessages((prev) => [...prev, { 
+            locations, 
+            sender: 'bot', 
+            isTyped: false, 
+            id: botMessageId 
+          }]);
         } else {
-          setMessages((prev) => [...prev, { text: responseText, sender: 'bot', isTyped: false }]);
+          setMessages((prev) => [...prev, { 
+            text: responseText, 
+            sender: 'bot', 
+            isTyped: false, 
+            id: botMessageId 
+          }]);
         }
-        break; // Exit loop on success
+        break;
       } catch (error) {
         if (attempt === retries) {
-          let errorMessage = 'Đã xảy ra lỗi. Vui lòng thử lại!';
-          if (error.response) {
-            if (error.response.status === 400) {
-              errorMessage = 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại!';
-            } else if (error.response.status === 500) {
-              errorMessage = 'Lỗi máy chủ. Vui lòng thử lại sau!';
-            } else {
-              errorMessage = error.response.data?.error || error.message;
-            }
-          }
           setMessages((prev) => [
             ...prev,
-            { text: errorMessage, sender: 'bot', isTyped: true },
+            { text: `Lỗi: ${error.message}. Vui lòng thử lại!`, sender: 'bot', isTyped: true, id: Date.now() + 2 },
           ]);
         }
       }
@@ -143,7 +192,13 @@ const App = () => {
   }, 1000);
 
   const handleSuggestionClick = (suggestion) => {
-    sendMessage(suggestion);
+    console.log('Suggestion clicked:', suggestion);
+    const originalMessage = allUserQuestions.find(msg => {
+      const truncated = msg.length > 20 ? msg.substring(0, 17) + '...' : msg;
+      return truncated === suggestion;
+    }) || suggestion;
+    console.log('Original message:', originalMessage);
+    sendMessage(originalMessage);
   };
 
   const handleLocationSelect = (locationName) => {
@@ -155,204 +210,526 @@ const App = () => {
     sendMessage(input);
   };
 
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  };
+
+  const resetChat = () => {
+    setMessages([]);
+    setInput('');
+    setIsTyping(false);
+    setTypingStates({});
+    const newSessionId = generateSessionId();
+    setSessionId(newSessionId);
+    setAllUserQuestions(prev => [...prev]);
+  };
+
+  const previousQuestions = getPreviousUserQuestions();
+
   return (
-    <div className="chat-container">
-      <div className="chat-header">
-        <h1>Chatbot Văn Hóa & Du Lịch</h1>
-      </div>
-      <div className="chat-body">
-        {messages.map((msg, index) => (
-          <div key={index} className={`message ${msg.sender}`}>
-            {msg.sender === 'user' ? (
-              <div className="user-message">{msg.text}</div>
-            ) : msg.locations ? (
-              <div className="bot-message">
-                {msg.isTyped ? (
-                  <>
-                    <p>Tìm thấy {msg.locations.length} địa điểm:</p>
-                    <div className="location-cards">
-                      {msg.locations.map((location, locIndex) => (
-                        <div key={locIndex} className="location-card">
-                          <h3>{location.name}</h3>
-                          {location.address && <p><strong>Địa chỉ:</strong> {location.address}</p>}
-                          {location.phone && <p><strong>Số điện thoại:</strong> {location.phone}</p>}
-                          {location.openingHours && <p><strong>Giờ mở cửa:</strong> {location.openingHours}</p>}
-                          {location.mapLink && (
-                            <p>
-                              <strong>Bản đồ:</strong>{' '}
-                              <a href={location.mapLink} target="_blank" rel="noopener noreferrer">
-                                {location.mapLink}
-                              </a>
-                            </p>
-                          )}
-                          {location.aiMenuLink && (
-                            <p>
-                              <strong>AI Menu:</strong>{' '}
-                              <a href={location.aiMenuLink} target="_blank" rel="noopener noreferrer">
-                                {location.aiMenuLink}
-                              </a>
-                            </p>
-                          )}
-                          {location.highlights && location.highlights.length > 0 && (
-                            <div>
-                              <p><strong>Điểm nổi bật:</strong></p>
-                              <ul>
-                                {location.highlights.map((highlight, hIndex) => (
-                                  <li key={hIndex}>{highlight}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          <button onClick={() => handleLocationSelect(location.name)}>
-                            Chọn địa điểm này
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <p>Bạn muốn chọn địa điểm nào?</p>
-                  </>
-                ) : (
-                  <>
-                    <Typist
-                      key={index}
-                      avgTypingDelay={20}
-                      stdTypingDelay={10}
-                      cursor={{ show: false }}
-                      onTypingDone={() => {
-                        setMessages((prev) =>
-                          prev.map((m, i) =>
-                            i === index ? { ...m, isTyped: true } : m
-                          )
-                        );
-                      }}
-                    >
-                      <p>Tìm thấy {msg.locations.length} địa điểm:</p>
-                    </Typist>
-                    <div className="location-cards">
-                      {msg.locations.map((location, locIndex) => (
-                        <div key={locIndex} className="location-card">
-                          <h3>{location.name}</h3>
-                          {location.address && <p><strong>Địa chỉ:</strong> {location.address}</p>}
-                          {location.phone && <p><strong>Số điện thoại:</strong> {location.phone}</p>}
-                          {location.openingHours && <p><strong>Giờ mở cửa:</strong> {location.openingHours}</p>}
-                          {location.mapLink && (
-                            <p>
-                              <strong>Bản đồ:</strong>{' '}
-                              <a href={location.mapLink} target="_blank" rel="noopener noreferrer">
-                                {location.mapLink}
-                              </a>
-                            </p>
-                          )}
-                          {location.aiMenuLink && (
-                            <p>
-                              <strong>AI Menu:</strong>{' '}
-                              <a href={location.aiMenuLink} target="_blank" rel="noopener noreferrer">
-                                {location.aiMenuLink}
-                              </a>
-                            </p>
-                          )}
-                          {location.highlights && location.highlights.length > 0 && (
-                            <div>
-                              <p><strong>Điểm nổi bật:</strong></p>
-                              <ul>
-                                {location.highlights.map((highlight, hIndex) => (
-                                  <li key={hIndex}>{highlight}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          <button onClick={() => handleLocationSelect(location.name)}>
-                            Chọn địa điểm này
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <Typist
-                      key={`${index}-question`}
-                      avgTypingDelay={20}
-                      stdTypingDelay={10}
-                      cursor={{ show: false }}
-                      startDelay={500}
-                      onTypingDone={() => {
-                        setMessages((prev) =>
-                          prev.map((m, i) =>
-                            i === index ? { ...m, isTyped: true } : m
-                          )
-                        );
-                      }}
-                    >
-                      <p>Bạn muốn chọn địa điểm nào?</p>
-                    </Typist>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="bot-message">
-                {msg.isTyped ? (
-                  msg.text
-                ) : (
-                  <Typist
-                    key={index}
-                    avgTypingDelay={20}
-                    stdTypingDelay={10}
-                    cursor={{ show: false }}
-                    onTypingDone={() => {
-                      setMessages((prev) =>
-                        prev.map((m, i) =>
-                          i === index ? { ...m, isTyped: true } : m
-                        )
-                      );
-                    }}
-                  >
-                    {msg.text}
-                  </Typist>
-                )}
-              </div>
+    <div style={{
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      position: 'relative',
+      height: '100vh',
+      backgroundColor: '#ffffff'
+    }}>
+      <button
+        aria-label={isChatOpen ? "Đóng chat" : "Mở chat"}
+        onClick={() => setIsChatOpen(!isChatOpen)}
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          border: 'none',
+          background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
+          color: 'white',
+          fontSize: '24px',
+          cursor: 'pointer',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
+          zIndex: 1000,
+          transition: 'all 0.3s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'scale(1.1)';
+          e.target.style.boxShadow = '0 12px 35px rgba(0,0,0,0.4)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'scale(1)';
+          e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+        }}
+      >
+        {isChatOpen ? '✕' : '💬'}
+      </button>
+
+      {isChatOpen && (
+        <div style={{
+          position: 'fixed',
+          bottom: '100px',
+          right: '24px',
+          width: '400px',
+          height: '600px',
+          background: 'white',
+          borderRadius: '16px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          zIndex: 999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          animation: 'slideUp 0.3s ease-out'
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea, #764ba2)',
+            color: 'white',
+            padding: '20px',
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>
+                Trợ lý Du lịch Khánh Hòa
+              </h3>
+              <p style={{ margin: '4px 0 0 0', fontSize: '14px', opacity: 0.9 }}>
+                Luôn sẵn sàng hỗ trợ bạn
+              </p>
+            </div>
+            {messages.length > 0 && (
+              <button
+                aria-label="Làm mới cuộc trò chuyện"
+                onClick={resetChat}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  borderRadius: '8px',
+                  color: 'white',
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(255,255,255,0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(255,255,255,0.2)';
+                }}
+              >
+                🔄 Làm mới
+              </button>
             )}
           </div>
-        ))}
-        {isTyping && (
-          <div className="message bot">
-            <div className="typing-indicator">
-              <span></span>
-              <span></span>
-              <span></span>
+
+          <div role="log" aria-live="polite" style={{
+            flex: 1,
+            padding: '16px',
+            overflowY: 'auto',
+            backgroundColor: '#f8f9fa',
+            paddingBottom: messages.length === 0 ? '8px' : '16px'
+          }}>
+            {messages.length === 0 && (
+              <div style={{
+                textAlign: 'center',
+                color: '#6c757d',
+                marginTop: '20px'
+              }}>
+                <p>👋 Xin chào! Tôi có thể giúp bạn tìm hiểu về:</p>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  marginTop: '12px'
+                }}>
+                  {[
+                    { emoji: '🏛️', text: 'văn hóa' },
+                    { emoji: '🎉', text: 'sự kiện' },
+                    { emoji: '🏖️', text: 'địa điểm du lịch' },
+                    { emoji: '🍜', text: 'ẩm thực' },
+                    { emoji: '🏥', text: 'y tế' },
+                    { emoji: '🚌', text: 'tour du lịch' }
+                  ].map((item, idx) => (
+                    <button
+                      key={idx}
+                      aria-label={`Tìm hiểu về ${item.text}`}
+                      onClick={() => handleSuggestionClick(`Tôi muốn tìm hiểu về ${item.text}`)}
+                      style={{
+                        fontSize: '14px',
+                        padding: '8px 12px',
+                        backgroundColor: 'white',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        color: '#495057'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#f8f9fa';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'white';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    >
+                      {item.emoji} {item.text.charAt(0).toUpperCase() + item.text.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {messages.map((msg, index) => (
+              <div key={msg.id || index} style={{
+                display: 'flex',
+                justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                marginBottom: '12px'
+              }}>
+                {msg.sender === 'user' ? (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    color: 'white',
+                    padding: '12px 16px',
+                    borderRadius: '18px 18px 4px 18px',
+                    maxWidth: '80%',
+                    fontSize: '14px',
+                    lineHeight: 1.4
+                  }}>
+                    {msg.text}
+                  </div>
+                ) : msg.locations ? (
+                  <div style={{
+                    background: 'white',
+                    border: '1px solid #e9ecef',
+                    borderRadius: '18px 18px 18px 4px',
+                    maxWidth: '90%',
+                    padding: '16px',
+                    fontSize: '14px'
+                  }}>
+                    {msg.isTyped ? (
+                      <>
+                        <p style={{ margin: '0 0 12px 0', fontWeight: 600, color: '#495057' }}>
+                          Tìm thấy {msg.locations.length} địa điểm:
+                        </p>
+                        {msg.locations.map((location, locIndex) => (
+                          <div key={locIndex} style={{
+                            background: '#f8f9fa',
+                            border: '1px solid #dee2e6',
+                            borderRadius: '12px',
+                            padding: '12px',
+                            marginBottom: '8px'
+                          }}>
+                            <h4 style={{ margin: '0 0 8px 0', color: '#343a40', fontSize: '16px' }}>
+                              {location.name}
+                            </h4>
+                            {location.address && (
+                              <p style={{ margin: '4px 0', fontSize: '13px', color: '#6c757d' }}>
+                                📍 {location.address}
+                              </p>
+                            )}
+                            {location.phone && (
+                              <p style={{ margin: '4px 0', fontSize: '13px', color: '#6c757d' }}>
+                                📞 {location.phone}
+                              </p>
+                            )}
+                            {location.openingHours && (
+                              <p style={{ margin: '4px 0', fontSize: '13px', color: '#6c757d' }}>
+                                🕒 {location.openingHours}
+                              </p>
+                            )}
+                            {location.highlights && location.highlights.length > 0 && (
+                              <div style={{ margin: '8px 0' }}>
+                                <p style={{ margin: '0 0 4px 0', fontWeight: 600, fontSize: '13px', color: '#495057' }}>
+                                  ✨ Điểm nổi bật:
+                                </p>
+                                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '13px', color: '#6c757d' }}>
+                                  {location.highlights.map((highlight, hIndex) => (
+                                    <li key={hIndex}>{highlight}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            <button
+                              aria-label={`Chọn ${location.name}`}
+                              onClick={() => handleLocationSelect(location.name)}
+                              style={{
+                                background: 'linear-gradient(135deg, #28a745, #20c997)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '6px 12px',
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                                marginTop: '8px'
+                              }}
+                            >
+                              Chọn địa điểm này
+                            </button>
+                          </div>
+                        ))}
+                        <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#6c757d' }}>
+                          Bạn muốn chọn địa điểm nào?
+                        </p>
+                      </>
+                    ) : (
+                      <div>
+                        <p style={{ margin: '0 0 12px 0', fontWeight: 600, color: '#495057' }}>
+                          <TypewriterText
+                            text={`Tìm thấy ${msg.locations.length} địa điểm:`}
+                            onComplete={() => {
+                              setTimeout(() => {
+                                setMessages((prev) =>
+                                  prev.map((m, i) =>
+                                    i === index ? { ...m, isTyped: true } : m
+                                  )
+                                );
+                              }, 1000);
+                            }}
+                          />
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{
+                    background: 'white',
+                    border: '1px solid #e9ecef',
+                    borderRadius: '18px 18px 18px 4px',
+                    maxWidth: '80%',
+                    padding: '12px 16px',
+                    fontSize: '14px',
+                    lineHeight: 1.4,
+                    color: '#495057'
+                  }}>
+                    {msg.isTyped ? (
+                      msg.text
+                    ) : (
+                      <TypewriterText
+                        text={msg.text}
+                        onComplete={() => {
+                          setMessages((prev) =>
+                            prev.map((m, i) =>
+                              i === index ? { ...m, isTyped: true } : m
+                            )
+                          );
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {isTyping && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                marginBottom: '12px'
+              }}>
+                <div style={{
+                  background: 'white',
+                  border: '1px solid #e9ecef',
+                  borderRadius: '18px 18px 18px 4px',
+                  padding: '12px 16px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    gap: '4px',
+                    alignItems: 'center'
+                  }}>
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          background: '#6c757d',
+                          animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite`
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {previousQuestions.length > 0 && (
+            <>
+              <div style={{
+                padding: '8px 16px 4px 16px',
+                borderTop: '1px solid #e9ecef',
+                fontSize: '11px',
+                color: '#6c757d',
+                backgroundColor: '#f8f9fa',
+                fontWeight: 500
+              }}>
+                💬 Câu hỏi trước:
+              </div>
+              <div style={{
+                padding: '0 12px 8px 12px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '4px',
+                backgroundColor: '#f8f9fa',
+                maxHeight: '60px',
+                overflowY: 'auto'
+              }}>
+                {previousQuestions.slice(0, 8).map((question, idx) => (
+                  <button
+                    key={idx}
+                    aria-label={`Gửi lại câu hỏi: ${question}`}
+                    tabIndex={0}
+                    onClick={() => handleSuggestionClick(question)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
+                    style={{
+                      background: '#fff',
+                      border: '1px solid #dee2e6',
+                      borderRadius: '10px',
+                      padding: '4px 8px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      color: '#495057',
+                      transition: 'all 0.15s ease',
+                      whiteSpace: 'nowrap',
+                      maxWidth: '120px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      lineHeight: 1.2,
+                      height: '22px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      flexShrink: 0
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = '#e9ecef';
+                      e.target.style.transform = 'translateY(-1px)';
+                      e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = '#fff';
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                    title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          <div style={{
+            padding: '16px',
+            borderTop: '1px solid #e9ecef',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            <div style={{
+              fontSize: '11px',
+              color: input.length > 450 ? '#dc3545' : '#6c757d',
+              textAlign: 'right',
+              margin: 0
+            }}>
+              {input.length}/500
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[\n\t\r]/g, ' ');
+                  if (value.length <= 500) {
+                    setInput(value);
+                  }
+                }}
+                onKeyPress={handleKeyPress}
+                placeholder="Nhập tin nhắn... (tối đa 500 ký tự)"
+                style={{
+                  flex: 1,
+                  border: `1px solid ${input.length > 450 ? '#ffc107' : '#dee2e6'}`,
+                  borderRadius: '20px',
+                  padding: '10px 16px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#667eea';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#dee2e6';
+                }}
+              />
+              <button
+                aria-label="Gửi tin nhắn"
+                onClick={handleSubmit}
+                disabled={isTyping || !input.trim()}
+                style={{
+                  background: isTyping || !input.trim() ? '#6c757d' : 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '20px',
+                  padding: '10px 16px',
+                  fontSize: '14px',
+                  cursor: isTyping || !input.trim() ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Gửi
+              </button>
             </div>
           </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-      <div className="suggestions">
-        <button onClick={() => handleSuggestionClick('Tôi muốn tìm hiểu về văn hóa Khánh Hòa')}>
-          Văn hóa
-        </button>
-        <button onClick={() => handleSuggestionClick('Tôi muốn tìm sự kiện ở Nha Trang')}>
-          Sự kiện
-        </button>
-        <button onClick={() => handleSuggestionClick('Tôi muốn tìm địa điểm tham quan ở Nha Trang')}>
-          Địa điểm du lịch
-        </button>
-        <button onClick={() => handleSuggestionClick('Tôi tìm nhà hàng')}>
-          Ẩm thực
-        </button>
-        <button onClick={() => handleSuggestionClick('Tôi tìm bệnh viện')}>
-          Y tế
-        </button>
-        <button onClick={() => handleSuggestionClick('Tôi tìm tour')}>
-          Tour du lịch
-        </button>
-      </div>
-      <form className="chat-input" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value.replace(/[\n\t\r]/g, ' '))}
-          placeholder="Nhập tin nhắn..."
-        />
-        <button type="submit" disabled={isTyping || !input.trim()}>
-          Gửi
-        </button>
-      </form>
+        </div>
+      )}
+
+      <style>
+        {`
+          @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          
+          @keyframes pulse {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+          }
+          
+          div::-webkit-scrollbar {
+            width: 6px;
+          }
+          
+          div::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+          }
+          
+          div::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+          }
+          
+          div::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+          }
+        `}
+      </style>
     </div>
   );
 };
