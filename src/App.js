@@ -615,7 +615,7 @@ const App = () => {
                         maxWidth: '100px',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        lineHeight: 1.2,
+                        lineHeight: '1.2',
                         height: '22px',
                         display: 'flex',
                         alignItems: 'center',
