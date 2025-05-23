@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-// Fallback debounce nếu không có lodash
 const debounce = (func, wait) => {
   let timeout;
   return (...args) => {
@@ -199,6 +198,14 @@ const App = () => {
     }) || suggestion;
     console.log('Original message:', originalMessage);
     sendMessage(originalMessage);
+  };
+
+  const handleDeleteQuestion = (suggestion) => {
+    const originalMessage = allUserQuestions.find(msg => {
+      const truncated = msg.length > 20 ? msg.substring(0, 17) + '...' : msg;
+      return truncated === suggestion;
+    }) || suggestion;
+    setAllUserQuestions(prev => prev.filter(q => q !== originalMessage));
   };
 
   const handleLocationSelect = (locationName) => {
@@ -589,45 +596,76 @@ const App = () => {
                 overflowY: 'auto'
               }}>
                 {previousQuestions.slice(0, 8).map((question, idx) => (
-                  <button
-                    key={idx}
-                    aria-label={`Gửi lại câu hỏi: ${question}`}
-                    tabIndex={0}
-                    onClick={() => handleSuggestionClick(question)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
-                    style={{
-                      background: '#fff',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '10px',
-                      padding: '4px 8px',
-                      fontSize: '11px',
-                      cursor: 'pointer',
-                      color: '#495057',
-                      transition: 'all 0.15s ease',
-                      whiteSpace: 'nowrap',
-                      maxWidth: '120px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      lineHeight: 1.2,
-                      height: '22px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      flexShrink: 0
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = '#e9ecef';
-                      e.target.style.transform = 'translateY(-1px)';
-                      e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = '#fff';
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                    title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
-                  >
-                    {question}
-                  </button>
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <button
+                      aria-label={`Gửi lại câu hỏi: ${question}`}
+                      tabIndex={0}
+                      onClick={() => handleSuggestionClick(question)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '10px',
+                        padding: '4px 8px',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        color: '#495057',
+                        transition: 'all 0.15s ease',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '100px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        lineHeight: 1.2,
+                        height: '22px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#e9ecef';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#fff';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                      title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
+                    >
+                      {question}
+                    </button>
+                    <button
+                      aria-label={`Xóa câu hỏi: ${question}`}
+                      tabIndex={0}
+                      onClick={() => handleDeleteQuestion(question)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleDeleteQuestion(question)}
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        fontSize: '10px',
+                        cursor: 'pointer',
+                        color: '#dc3545',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#dc3545';
+                        e.target.style.color = '#fff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#fff';
+                        e.target.style.color = '#dc3545';
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 ))}
               </div>
             </>
