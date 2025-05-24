@@ -17,20 +17,11 @@ const App = () => {
   const messagesEndRef = useRef(null);
   const [typingStates, setTypingStates] = useState({});
   const [allUserQuestions, setAllUserQuestions] = useState([]);
-  const [showQuickActions, setShowQuickActions] = useState(true);
-  const [quickActions, setQuickActions] = useState([
-    { emoji: '🏛️', text: 'văn hóa' },
-    { emoji: '🎉', text: 'sự kiện' },
-    { emoji: '🏖️', text: 'địa điểm du lịch' },
-    { emoji: '🍜', text: 'ẩm thực' },
-    { emoji: '🏥', text: 'y tế' },
-    { emoji: '🚌', text: 'tour du lịch' }
-  ]);
 
   const backendUrl = 'https://chatbot-backend-1-ja1c.onrender.com/api/chat';
 
   const generateSessionId = () => {
-    return 'sess_' + Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return 'sess_' + Date.now().toString(36) + Math.random().toString(1116).substr(2);
   };
 
   useEffect(() => {
@@ -149,7 +140,6 @@ const App = () => {
 
     setInput('');
     setIsTyping(true);
-    setShowQuickActions(false);
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
@@ -177,7 +167,7 @@ const App = () => {
             locations, 
             sender: 'bot', 
             isTyped: false, 
-            id: botMessageId 
+            id: boolMessageId 
           }]);
         } else {
           setMessages((prev) => [...prev, { 
@@ -242,15 +232,6 @@ const App = () => {
     const newSessionId = generateSessionId();
     setSessionId(newSessionId);
     setAllUserQuestions(prev => [...prev]);
-    setShowQuickActions(true);
-    setQuickActions([
-      { emoji: '🏛️', text: 'văn hóa' },
-      { emoji: '🎉', text: 'sự kiện' },
-      { emoji: '🏖️', text: 'địa điểm du lịch' },
-      { emoji: '🍜', text: 'ẩm thực' },
-      { emoji: '🏥', text: 'y tế' },
-      { emoji: '🚌', text: 'tour du lịch' }
-    ]);
   };
 
   const previousQuestions = getPreviousUserQuestions();
@@ -298,24 +279,20 @@ const App = () => {
       </button>
 
       {isChatOpen && (
-        <div
-          className={messages.length === 0 && showQuickActions && quickActions.length > 0 ? 'chat-box with-quick-actions' : 'chat-box'}
-          style={{
-            position: 'fixed',
-            bottom: 'calc(2vh + clamp(50px, 10vw, 60px) + 1vh)',
-            right: '2vw',
-            width: 'clamp(280px, 90vw, 400px)',
-            background: 'white',
-            borderRadius: '16px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-            zIndex: 999,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            animation: 'slideUp 0.3s ease-out',
-            transition: 'height 0.3s ease'
-          }}
-        >
+        <div className={`chat-box ${previousQuestions.length === 0 ? 'no-quick-actions' : ''}`} style={{
+          position: 'fixed',
+          bottom: 'calc(2vh + clamp(50px, 10vw, 60px) + 1vh)',
+          right: '2vw',
+          width: 'clamp(280px, 90vw, 400px)',
+          background: 'white',
+          borderRadius: '16px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          zIndex: 999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          animation: 'slideUp 0.3s ease-out'
+        }}>
           <div style={{
             background: 'linear-gradient(135deg, #667eea, #764ba2)',
             color: 'white',
@@ -370,16 +347,16 @@ const App = () => {
 
           <div role="log" aria-live="polite" style={{
             flex: 1,
-            padding: (messages.length === 0 && showQuickActions && quickActions.length > 0) ? 'clamp(12px, 3vw, 16px)' : 'clamp(8px, 2vw, 12px)',
+            padding: 'clamp(12px, 3vw, 16px)',
             overflowY: 'auto',
             backgroundColor: '#f8f9fa',
-            paddingBottom: (messages.length === 0 && showQuickActions && quickActions.length > 0) ? '8px' : 'clamp(12px, 3vw, 16px)'
+            paddingBottom: messages.length === 0 ? '8px' : 'clamp(12px, 3vw, 16px)'
           }}>
-            {messages.length === 0 && showQuickActions && quickActions.length > 0 && (
+            {messages.length === 0 && (
               <div style={{
                 textAlign: 'center',
                 color: '#6c757d',
-                marginTop: 'clamp(8px, 2vw, 12px)'
+                marginTop: 'clamp(16px, 4vw, 20px)'
               }}>
                 <p style={{ fontSize: 'clamp(14px, 3vw, 16px)' }}>
                   👋 Xin chào! Tôi có thể giúp bạn tìm hiểu về:
@@ -390,66 +367,41 @@ const App = () => {
                   gap: 'clamp(6px, 1.5vw, 8px)',
                   marginTop: 'clamp(8px, 2vw, 12px)'
                 }}>
-                  {quickActions.map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 'clamp(4px, 1vw, 6px)' }}>
-                      <button
-                        aria-label={`Tìm hiểu về ${item.text}`}
-                        onClick={() => {
-                          handleSuggestionClick(`Tôi muốn tìm hiểu về ${item.text}`);
-                          setQuickActions(prev => prev.filter((_, i) => i !== idx)); // Xóa quick action khi chọn
-                        }}
-                        style={{
-                          fontSize: 'clamp(12px, 2.5vw, 14px)',
-                          padding: 'clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px)',
-                          backgroundColor: 'white',
-                          border: '1px solid #dee2e6',
-                          borderRadius: '12px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          color: '#495057'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.backgroundColor = '#f8f9fa';
-                          e.target.style.transform = 'translateY(-1px)';
-                          e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.backgroundColor = 'white';
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = 'none';
-                        }}
-                      >
-                        {item.emoji} {item.text.charAt(0).toUpperCase() + item.text.slice(1)}
-                      </button>
-                      <button
-                        aria-label={`Xóa gợi ý ${item.text}`}
-                        onClick={() => setQuickActions(prev => prev.filter((_, i) => i !== idx))}
-                        style={{
-                          background: '#fff',
-                          border: '1px solid #dee2e6',
-                          borderRadius: '50%',
-                          width: 'clamp(16px, 4vw, 20px)',
-                          height: 'clamp(16px, 4vw, 20px)',
-                          fontSize: 'clamp(8px, 2vw, 10px)',
-                          cursor: 'pointer',
-                          color: '#dc3545',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.15s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.background = '#dc3545';
-                          e.target.style.color = '#fff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.background = '#fff';
-                          e.target.style.color = '#dc3545';
-                        }}
-                      >
-                        🗑️
-                      </button>
-                    </div>
+                  {[
+                    { emoji: '🏛️', text: 'văn hóa' },
+                    { emoji: '🎉', text: 'sự kiện' },
+                    { emoji: '🏖️', text: 'địa điểm du lịch' },
+                    { emoji: '🍜', text: 'ẩm thực' },
+                    { emoji: '🏥', text: 'y tế' },
+                    { emoji: '🚌', text: 'tour du lịch' }
+                  ].map((item, idx) => (
+                    <button
+                      key={idx}
+                      aria-label={`Tìm hiểu về ${item.text}`}
+                      onClick={() => handleSuggestionClick(`Tôi muốn tìm hiểu về ${item.text}`)}
+                      style={{
+                        fontSize: 'clamp(12px, 2.5vw, 14px)',
+                        padding: 'clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px)',
+                        backgroundColor: 'white',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        color: '#495057'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#f8f9fa';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'white';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    >
+                      {item.emoji} {item.text.charAt(0).toUpperCase() + item.text.slice(1)}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -559,7 +511,7 @@ const App = () => {
                               aria-label={`Chọn ${location.name}`}
                               onClick={() => handleLocationSelect(location.name)}
                               style={{
-                                background: 'linear-gradient(135deg, #8a4af3, #ff6b6b)',
+                                background: 'linear-gradient(135deg, #28a745, #20c997)',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '8px',
@@ -871,11 +823,11 @@ const App = () => {
           }
 
           .chat-box {
-            height: clamp(250px, 50vh, 400px);
+            height: clamp(400px, 80vh, 600px);
           }
 
-          .chat-box.with-quick-actions {
-            height: clamp(400px, 80vh, 600px);
+          .chat-box.no-quick-actions {
+            height: clamp(350px, 70vh, 500px);
           }
 
           @media (max-width: 768px) {
@@ -887,17 +839,16 @@ const App = () => {
               bottom: calc(1vh + clamp(50px, 10vw, 60px) + 0.5vh);
               right: 1vw;
               width: clamp(250px, 95vw, 360px);
-              height: clamp(200px, 55vh, 350px);
-            }
-            .chat-box.with-quick-actions {
               height: clamp(350px, 85vh, 500px);
+            }
+            .chat-box.no-quick-actions {
+              height: clamp(300px, 75vh, 450px);
             }
           }
 
           @media (max-width: 480px) {
-            div[style*="flex: 1; padding: clamp(8px, 2vw, 12px)"], 
             div[style*="flex: 1; padding: clamp(12px, 3vw, 16px)"] {
-              padding: clamp(6px, 1.5vw, 10px);
+              padding: clamp(8px, 2vw, 12px);
             }
             div[style*="padding: clamp(12px, 3vw, 16px); background-color: #ffffff"] {
               padding: clamp(8px, 2vw, 12px);
