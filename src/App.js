@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const debounce = (func, wait) => {
   let timeout;
@@ -6,25 +6,6 @@ const debounce = (func, wait) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };
-};
-
-const TypewriterText = ({ text, onComplete, delay = 30 }) => {
-  const [displayText, setDisplayText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    if (currentIndex < text.length) {
-      const timer = setTimeout(() => {
-        setDisplayText(prev => prev + text[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
-      }, delay);
-      return () => clearTimeout(timer);
-    } else if (onComplete) {
-      onComplete();
-    }
-  }, [currentIndex, text, delay, onComplete]);
-
-  return <span>{displayText}</span>;
 };
 
 const App = () => {
@@ -48,83 +29,9 @@ const App = () => {
     setSessionId(newSessionId);
   }, []);
 
-  const sendMessage = useCallback(
-    debounce(async (message, retries = 3) => {
-      if (!message.trim() || isTyping || !sessionId) {
-        if (!sessionId) {
-          setSessionId(generateSessionId());
-        }
-        return;
-      }
-
-      const cleanMessage = message.replace(/[\n\t\r]/g, ' ').trim();
-      const limitedMessage = cleanMessage.length > 500 ? cleanMessage.substring(0, 500) + '...' : cleanMessage;
-
-      setAllUserQuestions(prev => {
-        const updated = [...prev, limitedMessage];
-        return updated.slice(-20);
-      });
-
-      const newMessage = { text: limitedMessage, sender: 'user', id: Date.now() };
-      setMessages((prev) => [...prev, newMessage]);
-
-      setInput('');
-      setIsTyping(true);
-
-      for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-          const response = await fetch(backendUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: limitedMessage,
-              userId: 'user1',
-              sessionId: sessionId
-            })
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-          const responseText = data.response || '';
-          const botMessageId = Date.now() + 1;
-
-          if (responseText.includes('Tìm thấy')) {
-            const locations = parseResponse(responseText);
-            setMessages((prev) => [...prev, { 
-              locations, 
-              sender: 'bot', 
-              isTyped: false, 
-              id: botMessageId 
-            }]);
-          } else {
-            setMessages((prev) => [...prev, { 
-              text: responseText, 
-              sender: 'bot', 
-              isTyped: false, 
-              id: botMessageId 
-            }]);
-          }
-          break;
-        } catch (error) {
-          if (attempt === retries) {
-            setMessages((prev) => [
-              ...prev,
-              { text: `Lỗi: ${error.message}. Vui lòng thử lại!`, sender: 'bot', isTyped: true, id: Date.now() + 2 },
-            ]);
-          }
-        }
-      }
-      setIsTyping(false);
-    }, 1000),
-    [sessionId, isTyping]
-  );
-
   useEffect(() => {
     return () => sendMessage.cancel();
-  }, [sendMessage]);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -135,6 +42,7 @@ const App = () => {
   }, [messages]);
 
   const getPreviousUserQuestions = () => {
+    console.log('allUserQuestions:', allUserQuestions);
     const recentQuestions = allUserQuestions.slice(-6).reverse();
     const truncatedMessages = recentQuestions
       .map((text, index) => ({
@@ -146,6 +54,7 @@ const App = () => {
         self.findIndex(t => t.original === item.original) === index
       )
       .map(item => item.truncated);
+    console.log('truncatedMessages:', truncatedMessages);
     return truncatedMessages;
   };
 
@@ -191,11 +100,103 @@ const App = () => {
     return locations;
   };
 
+  const TypewriterText = ({ text, onComplete, delay = 30 }) => {
+    const [displayText, setDisplayText] = useState('');
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+      if (currentIndex < text.length) {
+        const timer = setTimeout(() => {
+          setDisplayText(prev => prev + text[currentIndex]);
+          setCurrentIndex(prev => prev + 1);
+        }, delay);
+        return () => clearTimeout(timer);
+      } else if (onComplete) {
+        onComplete();
+      }
+    }, [currentIndex, text, delay, onComplete]);
+
+    return <span>{displayText}</span>;
+  };
+
+  const sendMessage = debounce(async (message, retries = 3) => {
+    if (!message.trim() || isTyping || !sessionId) {
+      if (!sessionId) {
+        setSessionId(generateSessionId());
+      }
+      return;
+    }
+
+    const cleanMessage = message.replace(/[\n\t\r]/g, ' ').trim();
+    const limitedMessage = cleanMessage.length > 500 ? cleanMessage.substring(0, 500) + '...' : cleanMessage;
+
+    setAllUserQuestions(prev => {
+      const updated = [...prev, limitedMessage];
+      return updated.slice(-20);
+    });
+
+    const newMessage = { text: limitedMessage, sender: 'user', id: Date.now() };
+    setMessages((prev) => [...prev, newMessage]);
+
+    setInput('');
+    setIsTyping(true);
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const response = await fetch(backendUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: limitedMessage,
+            userId: 'user1',
+            sessionId: sessionId
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const responseText = data.response || '';
+        const botMessageId = Date.now() + 1;
+
+        if (responseText.includes('Tìm thấy')) {
+          const locations = parseResponse(responseText);
+          setMessages((prev) => [...prev, { 
+            locations, 
+            sender: 'bot', 
+            isTyped: false, 
+            id: botMessageId 
+          }]);
+        } else {
+          setMessages((prev) => [...prev, { 
+            text: responseText, 
+            sender: 'bot', 
+            isTyped: false, 
+            id: botMessageId 
+          }]);
+        }
+        break;
+      } catch (error) {
+        if (attempt === retries) {
+          setMessages((prev) => [
+            ...prev,
+            { text: `Lỗi: ${error.message}. Vui lòng thử lại!`, sender: 'bot', isTyped: true, id: Date.now() + 2 },
+          ]);
+        }
+      }
+    }
+    setIsTyping(false);
+  }, 1000);
+
   const handleSuggestionClick = (suggestion) => {
+    console.log('Suggestion clicked:', suggestion);
     const originalMessage = allUserQuestions.find(msg => {
       const truncated = msg.length > 20 ? msg.substring(0, 17) + '...' : msg;
       return truncated === suggestion;
     }) || suggestion;
+    console.log('Original message:', originalMessage);
     sendMessage(originalMessage);
   };
 
@@ -234,30 +235,91 @@ const App = () => {
   };
 
   const previousQuestions = getPreviousUserQuestions();
-  const hasQuickActions = previousQuestions.length > 0 || messages.length === 0;
 
   return (
-    <div className="font-sans relative h-screen bg-white overflow-hidden">
+    <div style={{
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      position: 'relative',
+      height: '100vh',
+      backgroundColor: '#ffffff',
+      overflow: 'hidden'
+    }}>
       <button
         aria-label={isChatOpen ? "Đóng chat" : "Mở chat"}
         onClick={() => setIsChatOpen(!isChatOpen)}
-        className="fixed bottom-[2vh] right-[2vw] w-[clamp(50px,10vw,60px)] h-[clamp(50px,10vw,60px)] rounded-full border-none bg-gradient-to-br from-[#ff6b6b] to-[#ee5a24] text-white text-[clamp(20px,4vw,24px)] cursor-pointer shadow-lg z-[1000] transition-all duration-300 flex items-center justify-center hover:scale-110 hover:shadow-xl"
+        style={{
+          position: 'fixed',
+          bottom: '2vh',
+          right: '2vw',
+          width: 'clamp(50px, 10vw, 60px)',
+          height: 'clamp(50px, 10vw, 60px)',
+          borderRadius: '50%',
+          border: 'none',
+          background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
+          color: 'white',
+          fontSize: 'clamp(20px, 4vw, 24px)',
+          cursor: 'pointer',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
+          zIndex: 1000,
+          transition: 'all 0.3s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'scale(1.1)';
+          e.target.style.boxShadow = '0 12px 35px rgba(0,0,0,0.4)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'scale(1)';
+          e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+        }}
       >
         {isChatOpen ? '✕' : '💬'}
       </button>
 
       {isChatOpen && (
         <div
-          className={`fixed bottom-[calc(2vh+clamp(50px,10vw,60px)+1vh)] right-[2vw] w-[clamp(280px,90vw,400px)] ${
-            hasQuickActions ? 'h-[clamp(400px,80vh,600px)]' : 'h-[clamp(300px,60vh,450px)]'
-          } bg-white rounded-2xl shadow-2xl z-[999] flex flex-col overflow-hidden animate-slideUp`}
+          className={messages.length === 0 ? 'chat-box with-quick-actions' : 'chat-box'}
+          style={{
+            position: 'fixed',
+            bottom: 'calc(2vh + clamp(50px, 10vw, 60px) + 1vh)',
+            right: '2vw',
+            width: 'clamp(280px, 90vw, 400px)',
+            background: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+            zIndex: 999,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            animation: 'slideUp 0.3s ease-out',
+            transition: 'height 0.3s ease'
+          }}
         >
-          <div className="bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white p-[clamp(12px,3vw,20px)] rounded-t-2xl flex justify-between items-center">
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea, #764ba2)',
+            color: 'white',
+            padding: 'clamp(12px, 3vw, 20px)',
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
             <div>
-              <h3 className="m-0 text-[clamp(16px,3vw,18px)] font-semibold">
+              <h3 style={{ 
+                margin: 0, 
+                fontSize: 'clamp(16px, 3vw, 18px)', 
+                fontWeight: 600 
+              }}>
                 Trợ lý Du lịch Khánh Hòa
               </h3>
-              <p className="mt-1 text-[clamp(12px,2.5vw,14px)] opacity-90">
+              <p style={{ 
+                margin: '4px 0 0 0', 
+                fontSize: 'clamp(12px, 2.5vw, 14px)', 
+                opacity: 0.9 
+              }}>
                 Luôn sẵn sàng hỗ trợ bạn
               </p>
             </div>
@@ -265,25 +327,50 @@ const App = () => {
               <button
                 aria-label="Làm mới cuộc trò chuyện"
                 onClick={resetChat}
-                className="bg-white/20 border border-white/30 rounded-lg text-white px-[clamp(8px,2vw,12px)] py-[clamp(4px,1vw,6px)] text-[clamp(10px,2vw,12px)] cursor-pointer hover:bg-white/30 transition-all duration-200"
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  borderRadius: '8px',
+                  color: 'white',
+                  padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px)',
+                  fontSize: 'clamp(10px, 2vw, 12px)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(255,255,255,0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(255,255,255,0.2)';
+                }}
               >
                 🔄 Làm mới
               </button>
             )}
           </div>
 
-          <div
-            role="log"
-            aria-live="polite"
-            className="flex-1 p-[clamp(12px,3vw,16px)] overflow-y-auto bg-gray-100 custom-scrollbar"
-            style={{ paddingBottom: messages.length === 0 ? '8px' : 'clamp(12px,3vw,16px)' }}
-          >
+          <div role="log" aria-live="polite" style={{
+            flex: 1,
+            padding: 'clamp(12px, 3vw, 16px)',
+            overflowY: 'auto',
+            backgroundColor: '#f8f9fa',
+            paddingBottom: messages.length === 0 ? '8px' : 'clamp(12px, 3vw, 16px)'
+          }}>
             {messages.length === 0 && (
-              <div className="text-center text-gray-600 mt-[clamp(16px,4vw,20px)]">
-                <p className="text-[clamp(14px,3vw,16px)]">
+              <div style={{
+                textAlign: 'center',
+                color: '#6c757d',
+                marginTop: 'clamp(16px, 4vw, 20px)'
+              }}>
+                <p style={{ fontSize: 'clamp(14px, 3vw, 16px)' }}>
                   👋 Xin chào! Tôi có thể giúp bạn tìm hiểu về:
                 </p>
-                <div className="flex flex-col gap-[clamp(6px,1.5vw,8px)] mt-[clamp(8px,2vw,12px)]">
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'clamp(6px, 1.5vw, 8px)',
+                  marginTop: 'clamp(8px, 2vw, 12px)'
+                }}>
                   {[
                     { emoji: '🏛️', text: 'văn hóa' },
                     { emoji: '🎉', text: 'sự kiện' },
@@ -296,7 +383,26 @@ const App = () => {
                       key={idx}
                       aria-label={`Tìm hiểu về ${item.text}`}
                       onClick={() => handleSuggestionClick(`Tôi muốn tìm hiểu về ${item.text}`)}
-                      className="text-[clamp(12px,2.5vw,14px)] p-[clamp(6px,1.5vw,8px)_clamp(8px,2vw,12px)] bg-white border border-gray-200 rounded-xl cursor-pointer text-gray-800 hover:bg-gray-50 hover:-translate-y-[1px] hover:shadow-md transition-all duration-200"
+                      style={{
+                        fontSize: 'clamp(12px, 2.5vw, 14px)',
+                        padding: 'clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px)',
+                        backgroundColor: 'white',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        color: '#495057'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#f8f9fa';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'white';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}
                     >
                       {item.emoji} {item.text.charAt(0).toUpperCase() + item.text.slice(1)}
                     </button>
@@ -306,50 +412,99 @@ const App = () => {
             )}
 
             {messages.map((msg, index) => (
-              <div
-                key={msg.id || index}
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} mb-[clamp(8px,2vw,12px)]`}
-              >
+              <div key={msg.id || index} style={{
+                display: 'flex',
+                justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                marginBottom: 'clamp(8px, 2vw, 12px)'
+              }}>
                 {msg.sender === 'user' ? (
-                  <div className="bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white p-[clamp(8px,2vw,12px)_clamp(12px,3vw,16px)] rounded-[18px_18px_4px_18px] max-w-[80%] text-[clamp(12px,2.5vw,14px)] leading-relaxed">
+                  <div style={{
+                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    color: 'white',
+                    padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px)',
+                    borderRadius: '18px 18px 4px 18px',
+                    maxWidth: '80%',
+                    fontSize: 'clamp(12px, 2.5vw, 14px)',
+                    lineHeight: 1.4
+                  }}>
                     {msg.text}
                   </div>
                 ) : msg.locations ? (
-                  <div className="bg-white border border-gray-200 rounded-[18px_18px_18px_4px] max-w-[90%] p-[clamp(12px,3vw,16px)] text-[clamp(12px,2.5vw,14px)]">
+                  <div style={{
+                    background: 'white',
+                    border: '1px solid #e9ecef',
+                    borderRadius: '18px 18px 18px 4px',
+                    maxWidth: '90%',
+                    padding: 'clamp(12px, 3vw, 16px)',
+                    fontSize: 'clamp(12px, 2.5vw, 14px)'
+                  }}>
                     {msg.isTyped ? (
                       <>
-                        <p className="m-0 mb-[clamp(8px,2vw,12px)] font-semibold text-gray-800">
+                        <p style={{ 
+                          margin: '0 0 clamp(8px, 2vw, 12px) 0', 
+                          fontWeight: 600, 
+                          color: '#495057' 
+                        }}>
                           Tìm thấy {msg.locations.length} địa điểm:
                         </p>
                         {msg.locations.map((location, locIndex) => (
-                          <div
-                            key={locIndex}
-                            className="bg-gray-50 border border-gray-200 rounded-xl p-[clamp(8px,2vw,12px)] mb-[clamp(6px,1.5vw,8px)]"
-                          >
-                            <h4 className="m-0 mb-[clamp(6px,1.5vw,8px)] text-[clamp(14px,3vw,16px)] text-gray-900">
+                          <div key={locIndex} style={{
+                            background: '#f8f9fa',
+                            border: '1px solid #dee2e6',
+                            borderRadius: '12px',
+                            padding: 'clamp(8px, 2vw, 12px)',
+                            marginBottom: 'clamp(6px, 1.5vw, 8px)'
+                          }}>
+                            <h4 style={{ 
+                              margin: '0 0 clamp(6px, 1.5vw, 8px) 0', 
+                              color: '#343a40', 
+                              fontSize: 'clamp(14px, 3vw, 16px)' 
+                            }}>
                               {location.name}
                             </h4>
                             {location.address && (
-                              <p className="m-[clamp(2px,0.5vw,4px)_0] text-[clamp(11px,2.2vw,13px)] text-gray-600">
+                              <p style={{ 
+                                margin: 'clamp(2px, 0.5vw, 4px) 0', 
+                                fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                color: '#6c757d' 
+                              }}>
                                 📍 {location.address}
                               </p>
                             )}
                             {location.phone && (
-                              <p className="m-[clamp(2px,0.5vw,4px)_0] text-[clamp(11px,2.2vw,13px)] text-gray-600">
+                              <p style={{ 
+                                margin: 'clamp(2px, 0.5vw, 4px) 0', 
+                                fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                color: '#6c757d' 
+                              }}>
                                 📞 {location.phone}
                               </p>
                             )}
                             {location.openingHours && (
-                              <p className="m-[clamp(2px,0.5vw,4px)_0] text-[clamp(11px,2.2vw,13px)] text-gray-600">
+                              <p style={{ 
+                                margin: 'clamp(2px, 0.5vw, 4px) 0', 
+                                fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                color: '#6c757d' 
+                              }}>
                                 🕒 {location.openingHours}
                               </p>
                             )}
                             {location.highlights && location.highlights.length > 0 && (
-                              <div className="mt-[clamp(6px,1.5vw,8px)]">
-                                <p className="m-0 mb-[clamp(2px,0.5vw,4px)] font-semibold text-[clamp(11px,2.2vw,13px)] text-gray-800">
+                              <div style={{ margin: 'clamp(6px, 1.5vw, 8px) 0' }}>
+                                <p style={{ 
+                                  margin: '0 0 clamp(2px, 0.5vw, 4px) 0', 
+                                  fontWeight: 600, 
+                                  fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                  color: '#495057' 
+                                }}>
                                   ✨ Điểm nổi bật:
                                 </p>
-                                <ul className="m-0 pl-[clamp(12px,3vw,16px)] text-[clamp(11px,2.2vw,13px)] text-gray-600">
+                                <ul style={{ 
+                                  margin: 0, 
+                                  paddingLeft: 'clamp(12px, 3vw, 16px)', 
+                                  fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                  color: '#6c757d' 
+                                }}>
                                   {location.highlights.map((highlight, hIndex) => (
                                     <li key={hIndex}>{highlight}</li>
                                   ))}
@@ -359,19 +514,36 @@ const App = () => {
                             <button
                               aria-label={`Chọn ${location.name}`}
                               onClick={() => handleLocationSelect(location.name)}
-                              className="mt-[clamp(6px,1.5vw,8px)] bg-gradient-to-br from-green-500 to-teal-400 text-white border-none rounded-lg px-[clamp(8px,2vw,12px)] py-[clamp(4px,1vw,6px)] text-[clamp(10px,2vw,12px)] cursor-pointer"
+                              style={{
+                                background: 'linear-gradient(135deg, #28a745, #20c997)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px)',
+                                fontSize: 'clamp(10px, 2vw, 12px)',
+                                cursor: 'pointer',
+                                marginTop: 'clamp(6px, 1.5vw, 8px)'
+                              }}
                             >
                               Chọn địa điểm này
                             </button>
                           </div>
                         ))}
-                        <p className="mt-[clamp(6px,1.5vw,8px)] text-[clamp(11px,2.2vw,13px)] text-gray-600">
+                        <p style={{ 
+                          margin: 'clamp(6px, 1.5vw, 8px) 0 0 0', 
+                          fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                          color: '#6c757d' 
+                        }}>
                           Bạn muốn chọn địa điểm nào?
                         </p>
                       </>
                     ) : (
                       <div>
-                        <p className="m-0 mb-[clamp(8px,2vw,12px)] font-semibold text-gray-800">
+                        <p style={{ 
+                          margin: '0 0 clamp(8px, 2vw, 12px) 0', 
+                          fontWeight: 600, 
+                          color: '#495057' 
+                        }}>
                           <TypewriterText
                             text={`Tìm thấy ${msg.locations.length} địa điểm:`}
                             onComplete={() => {
@@ -389,7 +561,16 @@ const App = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="bg-white border border-gray-200 rounded-[18px_18px_18px_4px] max-w-[80%] p-[clamp(8px,2vw,12px)_clamp(12px,3vw,16px)] text-[clamp(12px,2.5vw,14px)] leading-relaxed text-gray-800">
+                  <div style={{
+                    background: 'white',
+                    border: '1px solid #e9ecef',
+                    borderRadius: '18px 18px 18px 4px',
+                    maxWidth: '80%',
+                    padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px)',
+                    fontSize: 'clamp(12px, 2.5vw, 14px)',
+                    lineHeight: 1.4,
+                    color: '#495057'
+                  }}>
                     {msg.isTyped ? (
                       msg.text
                     ) : (
@@ -410,14 +591,32 @@ const App = () => {
             ))}
 
             {isTyping && (
-              <div className="flex justify-start mb-[clamp(8px,2vw,12px)]">
-                <div className="bg-white border border-gray-200 rounded-[18px_18px_18px_4px] p-[clamp(8px,2vw,12px)_clamp(12px,3vw,16px)]">
-                  <div className="flex gap-[clamp(3px,0.8vw,4px)] items-center">
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                marginBottom: 'clamp(8px, 2vw, 12px)'
+              }}>
+                <div style={{
+                  background: 'white',
+                  border: '1px solid #e9ecef',
+                  borderRadius: '18px 18px 18px 4px',
+                  padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px)'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    gap: 'clamp(3px, 0.8vw, 4px)',
+                    alignItems: 'center'
+                  }}>
                     {[0, 1, 2].map((i) => (
                       <div
                         key={i}
-                        className="w-[clamp(6px,1.5vw,8px)] h-[clamp(6px,1.5vw,8px)] rounded-full bg-gray-600 animate-pulse"
-                        style={{ animationDelay: `${i * 0.2}s` }}
+                        style={{
+                          width: 'clamp(6px, 1.5vw, 8px)',
+                          height: 'clamp(6px, 1.5vw, 8px)',
+                          borderRadius: '50%',
+                          background: '#6c757d',
+                          animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite`
+                        }}
                       />
                     ))}
                   </div>
@@ -428,27 +627,97 @@ const App = () => {
           </div>
 
           {previousQuestions.length > 0 && (
-            <div className="bg-gray-100 border-t border-gray-200">
-              <div className="p-[clamp(6px,1.5vw,8px)_clamp(12px,3vw,16px)_clamp(2px,0.5vw,4px)] text-[clamp(10px,2vw,11px)] text-gray-600 font-medium">
+            <div style={{
+              backgroundColor: '#f8f9fa',
+              borderTop: '1px solid #e9ecef'
+            }}>
+              <div style={{
+                padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px) clamp(2px, 0.5vw, 4px)',
+                fontSize: 'clamp(10px, 2vw, 11px)',
+                color: '#6c757d',
+                fontWeight: 500
+              }}>
                 💬 Câu hỏi trước:
               </div>
-              <div className="p-[0_clamp(8px,2vw,12px)_clamp(6px,1.5vw,8px)] flex flex-wrap gap-[clamp(3px,0.8vw,4px)] max-h-[clamp(50px,15vw,60px)] overflow-y-auto custom-scrollbar">
+              <div style={{
+                padding: '0 clamp(8px, 2vw, 12px) clamp(6px, 1.5vw, 8px)',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 'clamp(3px, 0.8vw, 4px)',
+                maxHeight: 'clamp(50px, 15vw, 60px)',
+                overflowY: 'auto'
+              }}>
                 {previousQuestions.slice(0, 8).map((question, idx) => (
-                  <div key={idx} className="flex items-center gap-[clamp(3px,0.8vw,4px)]">
+                  <div key={idx} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 'clamp(3px, 0.8vw, 4px)' 
+                  }}>
                     <button
                       aria-label={`Gửi lại câu hỏi: ${question}`}
+                      tabIndex={0}
                       onClick={() => handleSuggestionClick(question)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
-                      className="bg-white border border-gray-200 rounded-[10px] px-[clamp(6px,1.5vw,8px)] py-[clamp(3px,0.8vw,4px)] text-[clamp(10px,2vw,11px)] cursor-pointer text-gray-800 hover:bg-gray-200 hover:-translate-y-[1px] hover:shadow-sm transition-all duration-150 whitespace-nowrap max-w-[clamp(80px,25vw,100px)] overflow-hidden text-ellipsis leading-[1.2] h-[clamp(18px,5vw,22px)] flex items-center flex-shrink-0"
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '10px',
+                        padding: 'clamp(3px, 0.8vw, 4px) clamp(6px, 1.5vw, 8px)',
+                        fontSize: 'clamp(10px, 2vw, 11px)',
+                        cursor: 'pointer',
+                        color: '#495057',
+                        transition: 'all 0.15s ease',
+                        whiteSpace: 'nowrap',
+                        maxWidth: 'clamp(80px, 25vw, 100px)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        lineHeight: '1.2',
+                        height: 'clamp(18px, 5vw, 22px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#e9ecef';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#fff';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}
                       title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
                     >
                       {question}
                     </button>
                     <button
                       aria-label={`Xóa câu hỏi: ${question}`}
+                      tabIndex={0}
                       onClick={() => handleDeleteQuestion(question)}
                       onKeyDown={(e) => e.key === 'Enter' && handleDeleteQuestion(question)}
-                      className="bg-white border border-gray-200 rounded-full w-[clamp(16px,4vw,20px)] h-[clamp(16px,4vw,20px)] text-[clamp(8px,2vw,10px)] cursor-pointer text-red-600 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all duration-150"
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '50%',
+                        width: 'clamp(16px, 4vw, 20px)',
+                        height: 'clamp(16px, 4vw, 20px)',
+                        fontSize: 'clamp(8px, 2vw, 10px)',
+                        cursor: 'pointer',
+                        color: '#dc3545',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#dc3545';
+                        e.target.style.color = '#fff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#fff';
+                        e.target.style.color = '#dc3545';
+                      }}
                     >
                       🗑️
                     </button>
@@ -458,11 +727,24 @@ const App = () => {
             </div>
           )}
 
-          <div className={`p-[clamp(12px,3vw,16px)] bg-white ${previousQuestions.length > 0 ? '' : 'border-t border-gray-200'}`}>
-            <div className={`text-right mb-[clamp(6px,1.5vw,8px)] text-[clamp(10px,2vw,11px)] ${input.length > 450 ? 'text-red-600' : 'text-gray-600'}`}>
+          <div style={{
+            padding: 'clamp(12px, 3vw, 16px)',
+            backgroundColor: '#ffffff',
+            borderTop: previousQuestions.length > 0 ? 'none' : '1px solid #e9ecef'
+          }}>
+            <div style={{
+              fontSize: 'clamp(10px, 2vw, 11px)',
+              color: input.length > 450 ? '#dc3545' : '#6c757d',
+              textAlign: 'right',
+              marginBottom: 'clamp(6px, 1.5vw, 8px)'
+            }}>
               {input.length}/500
             </div>
-            <div className="flex gap-[clamp(6px,1.5vw,8px)] flex-wrap">
+            <div style={{ 
+              display: 'flex', 
+              gap: 'clamp(6px, 1.5vw, 8px)',
+              flexWrap: 'wrap' 
+            }}>
               <input
                 type="text"
                 value={input}
@@ -474,13 +756,38 @@ const App = () => {
                 }}
                 onKeyPress={handleKeyPress}
                 placeholder="Nhập tin nhắn... (tối đa 500 ký tự)"
-                className={`flex-1 border ${input.length > 450 ? 'border-yellow-500' : 'border-gray-200'} rounded-[clamp(16px,4vw,20px)] p-[clamp(8px,2vw,10px)_clamp(12px,3vw,16px)] text-[clamp(12px,2.5vw,14px)] outline-none transition-colors duration-200 min-w-[150px] focus:border-indigo-500`}
+                style={{
+                  flex: 1,
+                  border: `1px solid ${input.length > 450 ? '#ffc107' : '#dee2e6'}`,
+                  borderRadius: 'clamp(16px, 4vw, 20px)',
+                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
+                  fontSize: 'clamp(12px, 2.5vw, 14px)',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease',
+                  minWidth: '150px'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#667eea';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#dee2e6';
+                }}
               />
               <button
                 aria-label="Gửi tin nhắn"
                 onClick={handleSubmit}
                 disabled={isTyping || !input.trim()}
-                className={`bg-gradient-to-br ${isTyping || !input.trim() ? 'bg-gray-600' : 'from-[#667eea] to-[#764ba2]'} text-white border-none rounded-[clamp(16px,4vw,20px)] px-[clamp(12px,3vw,16px)] py-[clamp(8px,2vw,10px)] text-[clamp(12px,2.5vw,14px)] ${isTyping || !input.trim() ? 'cursor-not-allowed' : 'cursor-pointer'} transition-all duration-200 whitespace-nowrap`}
+                style={{
+                  background: isTyping || !input.trim() ? '#6c757d' : 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 'clamp(16px, 4vw, 20px)',
+                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
+                  fontSize: 'clamp(12px, 2.5vw, 14px)',
+                  cursor: isTyping || !input.trim() ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap'
+                }}
               >
                 Gửi
               </button>
@@ -488,6 +795,74 @@ const App = () => {
           </div>
         </div>
       )}
+
+      <style>
+        {`
+          @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          
+          @keyframes pulse {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+          }
+          
+          div::-webkit-scrollbar {
+            width: clamp(4px, 1vw, 6px);
+          }
+          
+          div::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+          }
+          
+          div::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+          }
+          
+          div::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+          }
+
+          .chat-box {
+            height: clamp(300px, 60vh, 450px);
+          }
+
+          .chat-box.with-quick-actions {
+            height: clamp(400px, 80vh, 600px);
+          }
+
+          @media (max-width: 768px) {
+            button[aria-label="Đóng chat"], button[aria-label="Mở chat"] {
+              bottom: 1vh;
+              right: 1vw;
+            }
+            .chat-box {
+              bottom: calc(1vh + clamp(50px, 10vw, 60px) + 0.5vh);
+              right: 1vw;
+              width: clamp(250px, 95vw, 360px);
+              height: clamp(250px, 65vh, 400px);
+            }
+            .chat-box.with-quick-actions {
+              height: clamp(350px, 85vh, 500px);
+            }
+          }
+
+          @media (max-width: 480px) {
+            div[style*="flex: 1; padding: clamp(12px, 3vw, 16px)"] {
+              padding: clamp(8px, 2vw, 12px);
+            }
+            div[style*="padding: clamp(12px, 3vw, 16px); background-color: #ffffff"] {
+              padding: clamp(8px, 2vw, 12px);
+            }
+            input[placeholder="Nhập tin nhắn... (tối đa 500 ký tự)"] {
+              min-width: 120px;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 };
