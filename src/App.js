@@ -17,7 +17,15 @@ const App = () => {
   const messagesEndRef = useRef(null);
   const [typingStates, setTypingStates] = useState({});
   const [allUserQuestions, setAllUserQuestions] = useState([]);
-  const [showQuickActions, setShowQuickActions] = useState(true); // State mới để quản lý quick actions
+  const [showQuickActions, setShowQuickActions] = useState(true);
+  const [quickActions, setQuickActions] = useState([
+    { emoji: '🏛️', text: 'văn hóa' },
+    { emoji: '🎉', text: 'sự kiện' },
+    { emoji: '🏖️', text: 'địa điểm du lịch' },
+    { emoji: '🍜', text: 'ẩm thực' },
+    { emoji: '🏥', text: 'y tế' },
+    { emoji: '🚌', text: 'tour du lịch' }
+  ]);
 
   const backendUrl = 'https://chatbot-backend-1-ja1c.onrender.com/api/chat';
 
@@ -141,7 +149,7 @@ const App = () => {
 
     setInput('');
     setIsTyping(true);
-    setShowQuickActions(false); // Ẩn quick actions khi gửi tin nhắn
+    setShowQuickActions(false);
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
@@ -234,20 +242,18 @@ const App = () => {
     const newSessionId = generateSessionId();
     setSessionId(newSessionId);
     setAllUserQuestions(prev => [...prev]);
-    setShowQuickActions(true); // Hiển thị lại quick actions khi reset
+    setShowQuickActions(true);
+    setQuickActions([
+      { emoji: '🏛️', text: 'văn hóa' },
+      { emoji: '🎉', text: 'sự kiện' },
+      { emoji: '🏖️', text: 'địa điểm du lịch' },
+      { emoji: '🍜', text: 'ẩm thực' },
+      { emoji: '🏥', text: 'y tế' },
+      { emoji: '🚌', text: 'tour du lịch' }
+    ]);
   };
 
   const previousQuestions = getPreviousUserQuestions();
-
-  // Danh sách quick actions
-  const quickActions = [
-    { emoji: '🏛️', text: 'văn hóa' },
-    { emoji: '🎉', text: 'sự kiện' },
-    { emoji: '🏖️', text: 'địa điểm du lịch' },
-    { emoji: '🍜', text: 'ẩm thực' },
-    { emoji: '🏥', text: 'y tế' },
-    { emoji: '🚌', text: 'tour du lịch' }
-  ];
 
   return (
     <div style={{
@@ -293,7 +299,7 @@ const App = () => {
 
       {isChatOpen && (
         <div
-          className={messages.length === 0 && showQuickActions ? 'chat-box with-quick-actions' : 'chat-box'}
+          className={messages.length === 0 && showQuickActions && quickActions.length > 0 ? 'chat-box with-quick-actions' : 'chat-box'}
           style={{
             position: 'fixed',
             bottom: 'calc(2vh + clamp(50px, 10vw, 60px) + 1vh)',
@@ -364,16 +370,16 @@ const App = () => {
 
           <div role="log" aria-live="polite" style={{
             flex: 1,
-            padding: messages.length === 0 && showQuickActions ? 'clamp(12px, 3vw, 16px)' : 'clamp(8px, 2vw, 12px)',
+            padding: (messages.length === 0 && showQuickActions && quickActions.length > 0) ? 'clamp(12px, 3vw, 16px)' : 'clamp(8px, 2vw, 12px)',
             overflowY: 'auto',
             backgroundColor: '#f8f9fa',
-            paddingBottom: messages.length === 0 && showQuickActions ? '8px' : 'clamp(12px, 3vw, 16px)'
+            paddingBottom: (messages.length === 0 && showQuickActions && quickActions.length > 0) ? '8px' : 'clamp(12px, 3vw, 16px)'
           }}>
             {messages.length === 0 && showQuickActions && quickActions.length > 0 && (
               <div style={{
                 textAlign: 'center',
                 color: '#6c757d',
-                marginTop: 'clamp(8px, 2vw, 12px)' // Giảm marginTop để giảm khoảng trống
+                marginTop: 'clamp(8px, 2vw, 12px)'
               }}>
                 <p style={{ fontSize: 'clamp(14px, 3vw, 16px)' }}>
                   👋 Xin chào! Tôi có thể giúp bạn tìm hiểu về:
@@ -385,37 +391,65 @@ const App = () => {
                   marginTop: 'clamp(8px, 2vw, 12px)'
                 }}>
                   {quickActions.map((item, idx) => (
-                    <button
-                      key={idx}
-                      aria-label={`Tìm hiểu về ${item.text}`}
-                      onClick={() => {
-                        handleSuggestionClick(`Tôi muốn tìm hiểu về ${item.text}`);
-                        // Xóa quick action sau khi chọn (tùy chọn, nếu bạn muốn xóa từng cái)
-                        // setQuickActions(prev => prev.filter((_, i) => i !== idx));
-                      }}
-                      style={{
-                        fontSize: 'clamp(12px, 2.5vw, 14px)',
-                        padding: 'clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px)',
-                        backgroundColor: 'white',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        color: '#495057'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#f8f9fa';
-                        e.target.style.transform = 'translateY(-1px)';
-                        e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = 'white';
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                    >
-                      {item.emoji} {item.text.charAt(0).toUpperCase() + item.text.slice(1)}
-                    </button>
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 'clamp(4px, 1vw, 6px)' }}>
+                      <button
+                        aria-label={`Tìm hiểu về ${item.text}`}
+                        onClick={() => {
+                          handleSuggestionClick(`Tôi muốn tìm hiểu về ${item.text}`);
+                          setQuickActions(prev => prev.filter((_, i) => i !== idx)); // Xóa quick action khi chọn
+                        }}
+                        style={{
+                          fontSize: 'clamp(12px, 2.5vw, 14px)',
+                          padding: 'clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px)',
+                          backgroundColor: 'white',
+                          border: '1px solid #dee2e6',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          color: '#495057'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = '#f8f9fa';
+                          e.target.style.transform = 'translateY(-1px)';
+                          e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = 'white';
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      >
+                        {item.emoji} {item.text.charAt(0).toUpperCase() + item.text.slice(1)}
+                      </button>
+                      <button
+                        aria-label={`Xóa gợi ý ${item.text}`}
+                        onClick={() => setQuickActions(prev => prev.filter((_, i) => i !== idx))}
+                        style={{
+                          background: '#fff',
+                          border: '1px solid #dee2e6',
+                          borderRadius: '50%',
+                          width: 'clamp(16px, 4vw, 20px)',
+                          height: 'clamp(16px, 4vw, 20px)',
+                          fontSize: 'clamp(8px, 2vw, 10px)',
+                          cursor: 'pointer',
+                          color: '#dc3545',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.15s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background = '#dc3545';
+                          e.target.style.color = '#fff';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background = '#fff';
+                          e.target.style.color = '#dc3545';
+                        }}
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -525,7 +559,7 @@ const App = () => {
                               aria-label={`Chọn ${location.name}`}
                               onClick={() => handleLocationSelect(location.name)}
                               style={{
-                                background: 'linear-gradient(135deg, #28a745, #20c997)',
+                                background: 'linear-gradient(135deg, #8a4af3, #ff6b6b)',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '8px',
