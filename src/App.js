@@ -350,8 +350,7 @@ const App = () => {
             flex: 1,
             padding: 'clamp(12px, 3vw, 16px)',
             overflowY: 'auto',
-            backgroundColor: '#f8f9fa',
-            paddingBottom: messages.length === 0 ? '8px' : 'clamp(12px, 3vw, 16px)'
+            backgroundColor: '#f8f9fa'
           }}>
             {messages.length === 0 && (
               <div style={{
@@ -626,29 +625,29 @@ const App = () => {
           {previousQuestions.length > 0 && (
             <div style={{
               backgroundColor: '#f8f9fa',
+              padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px)',
               borderTop: '1px solid #e9ecef'
             }}>
               <div style={{
-                padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px) clamp(2px, 0.5vw, 4px)',
-                fontSize: 'clamp(10px, 2vw, 11px)',
+                fontSize: 'clamp(9px, 1.8vw, 10px)',
                 color: '#6c757d',
-                fontWeight: 500
+                fontWeight: 500,
+                marginBottom: 'clamp(2px, 0.5vw, 4px)'
               }}>
                 💬 Câu hỏi trước:
               </div>
               <div style={{
-                padding: '0 clamp(8px, 2vw, 12px) clamp(6px, 1.5vw, 8px)',
                 display: 'flex',
                 flexWrap: 'wrap',
-                gap: 'clamp(3px, 0.8vw, 4px)',
-                maxHeight: 'clamp(50px, 15vw, 60px)',
+                gap: 'clamp(2px, 0.5vw, 3px)',
+                maxHeight: 'clamp(40px, 12vw, 50px)',
                 overflowY: 'auto'
               }}>
                 {previousQuestions.slice(0, 8).map((question, idx) => (
                   <div key={idx} style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: 'clamp(3px, 0.8vw, 4px)' 
+                    gap: 'clamp(2px, 0.5vw, 3px)' 
                   }}>
                     <button
                       aria-label={`Gửi lại câu hỏi: ${question}`}
@@ -658,18 +657,18 @@ const App = () => {
                       style={{
                         background: '#fff',
                         border: '1px solid #dee2e6',
-                        borderRadius: '10px',
-                        padding: 'clamp(3px, 0.8vw, 4px) clamp(6px, 1.5vw, 8px)',
-                        fontSize: 'clamp(10px, 2vw, 11px)',
+                        borderRadius: '8px',
+                        padding: 'clamp(2px, 0.5vw, 3px) clamp(4px, 1vw, 6px)',
+                        fontSize: 'clamp(9px, 1.8vw, 10px)',
                         cursor: 'pointer',
                         color: '#495057',
                         transition: 'all 0.15s ease',
                         whiteSpace: 'nowrap',
-                        maxWidth: 'clamp(80px, 25vw, 100px)',
+                        maxWidth: 'clamp(70px, 20vw, 90px)',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         lineHeight: '1.2',
-                        height: 'clamp(18px, 5vw, 22px)',
+                        height: 'clamp(16px, 4vw, 18px)',
                         display: 'flex',
                         alignItems: 'center',
                         flexShrink: 0
@@ -697,9 +696,9 @@ const App = () => {
                         background: '#fff',
                         border: '1px solid #dee2e6',
                         borderRadius: '50%',
-                        width: 'clamp(16px, 4vw, 20px)',
-                        height: 'clamp(16px, 4vw, 20px)',
-                        fontSize: 'clamp(8px, 2vw, 10px)',
+                        width: 'clamp(14px, 3vw, 16px)',
+                        height: 'clamp(14px, 3vw, 16px)',
+                        fontSize: 'clamp(8px, 1.8vw, 9px)',
                         cursor: 'pointer',
                         color: '#dc3545',
                         display: 'flex',
@@ -725,21 +724,20 @@ const App = () => {
           )}
 
           <div style={{
-            padding: 'clamp(12px, 3vw, 16px)',
-            backgroundColor: '#ffffff',
-            borderTop: previousQuestions.length > 0 ? 'none' : '1px solid #e9ecef'
+            padding: 'clamp(8px, 2vw, 12px)',
+            backgroundColor: '#ffffff'
           }}>
             <div style={{
-              fontSize: 'clamp(10px, 2vw, 11px)',
+              fontSize: 'clamp(9px, 1.8vw, 10px)',
               color: input.length > 450 ? '#dc3545' : '#6c757d',
               textAlign: 'right',
-              marginBottom: 'clamp(6px, 1.5vw, 8px)'
+              marginBottom: 'clamp(4px, 1vw, 6px)'
             }}>
               {input.length}/500
             </div>
             <div style={{ 
               display: 'flex', 
-              gap: 'clamp(6px, 1.5vw, 8px)',
+              gap: 'clamp(4px, 1vw, 6px)',
               flexWrap: 'wrap' 
             }}>
               <input
@@ -756,12 +754,12 @@ const App = () => {
                 style={{
                   flex: 1,
                   border: `1px solid ${input.length > 450 ? '#ffc107' : '#dee2e6'}`,
-                  borderRadius: 'clamp(16px, 4vw, 20px)',
-                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
+                  borderRadius: 'clamp(12px, 3vw, 16px)',
+                  padding: 'clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px)',
                   fontSize: 'clamp(12px, 2.5vw, 14px)',
                   outline: 'none',
                   transition: 'border-color 0.2s ease',
-                  minWidth: '150px'
+                  minWidth: '120px'
                 }}
                 onFocus={(e) => {
                   e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#667eea';
@@ -778,8 +776,8 @@ const App = () => {
                   background: isTyping || !input.trim() ? '#6c757d' : 'linear-gradient(135deg, #667eea, #764ba2)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: 'clamp(16px, 4vw, 20px)',
-                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
+                  borderRadius: 'clamp(12px, 3vw, 16px)',
+                  padding: 'clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px)',
                   fontSize: 'clamp(12px, 2.5vw, 14px)',
                   cursor: isTyping || !input.trim() ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
@@ -840,11 +838,11 @@ const App = () => {
             div[style*="flex: 1; padding: clamp(12px, 3vw, 16px)"] {
               padding: clamp(8px, 2vw, 12px);
             }
-            div[style*="padding: clamp(12px, 3vw, 16px); background-color: #ffffff"] {
-              padding: clamp(8px, 2vw, 12px);
+            div[style*="padding: clamp(8px, 2vw, 12px); background-color: #ffffff"] {
+              padding: clamp(6px, 1.5vw, 8px);
             }
             input[placeholder="Nhập tin nhắn... (tối đa 500 ký tự)"] {
-              min-width: 120px;
+              min-width: 100px;
             }
           }
         `}
