@@ -347,25 +347,25 @@ const App = () => {
 
           <div role="log" aria-live="polite" style={{
             flex: 1,
-            padding: 'clamp(12px, 3vw, 16px)',
+            padding: 'clamp(10px, 2.5vw, 14px)',
             overflowY: 'auto',
             backgroundColor: '#f8f9fa',
-            paddingBottom: messages.length === 0 ? '8px' : 'clamp(12px, 3vw, 16px)'
+            paddingBottom: messages.length === 0 ? '8px' : 'clamp(10px, 2.5vw, 14px)'
           }}>
             {messages.length === 0 && (
               <div style={{
                 textAlign: 'center',
                 color: '#6c757d',
-                marginTop: 'clamp(16px, 4vw, 20px)'
+                marginTop: 'clamp(12px, 3vw, 16px)'
               }}>
-                <p style={{ fontSize: 'clamp(14px, 3vw, 16px)' }}>
+                <p style={{ fontSize: 'clamp(13px, 2.8vw, 15px)' }}>
                   👋 Xin chào! Tôi có thể giúp bạn tìm hiểu về:
                 </p>
                 <div style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 'clamp(6px, 1.5vw, 8px)',
-                  marginTop: 'clamp(8px, 2vw, 12px)'
+                  gap: 'clamp(5px, 1.2vw, 7px)',
+                  marginTop: 'clamp(6px, 1.5vw, 10px)'
                 }}>
                   {[
                     { emoji: '🏛️', text: 'văn hóa' },
@@ -380,11 +380,11 @@ const App = () => {
                       aria-label={`Tìm hiểu về ${item.text}`}
                       onClick={() => handleSuggestionClick(`Tôi muốn tìm hiểu về ${item.text}`)}
                       style={{
-                        fontSize: 'clamp(12px, 2.5vw, 14px)',
-                        padding: 'clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px)',
+                        fontSize: 'clamp(11px, 2.3vw, 13px)',
+                        padding: 'clamp(5px, 1.2vw, 7px) clamp(7px, 1.8vw, 10px)',
                         backgroundColor: 'white',
                         border: '1px solid #dee2e6',
-                        borderRadius: '12px',
+                        borderRadius: '10px',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         color: '#495057'
@@ -411,16 +411,16 @@ const App = () => {
               <div key={msg.id || index} style={{
                 display: 'flex',
                 justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                marginBottom: 'clamp(8px, 2vw, 12px)'
+                marginBottom: 'clamp(6px, 1.5vw, 10px)'
               }}>
                 {msg.sender === 'user' ? (
                   <div style={{
                     background: 'linear-gradient(135deg, #667eea, #764ba2)',
                     color: 'white',
-                    padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px)',
-                    borderRadius: '18px 18px 4px 18px',
+                    padding: 'clamp(6px, 1.5vw, 10px) clamp(10px, 2.5vw, 14px)',
+                    borderRadius: '16px 16px 4px 16px',
                     maxWidth: '80%',
-                    fontSize: 'clamp(12px, 2.5vw, 14px)',
+                    fontSize: 'clamp(11px, 2.3vw, 13px)',
                     lineHeight: 1.4
                   }}>
                     {msg.text}
@@ -429,15 +429,15 @@ const App = () => {
                   <div style={{
                     background: 'white',
                     border: '1px solid #e9ecef',
-                    borderRadius: '18px 18px 18px 4px',
+                    borderRadius: '16px 16px 16px 4px',
                     maxWidth: '90%',
-                    padding: 'clamp(12px, 3vw, 16px)',
-                    fontSize: 'clamp(12px, 2.5vw, 14px)'
+                    padding: 'clamp(10px, 2.5vw, 14px)',
+                    fontSize: 'clamp(11px, 2.3vw, 13px)'
                   }}>
                     {msg.isTyped ? (
                       <>
                         <p style={{ 
-                          margin: '0 0 clamp(8px, 2vw, 12px) 0', 
+                          margin: '0 0 clamp(6px, 1.5vw, 10px) 0', 
                           fontWeight: 600, 
                           color: '#495057' 
                         }}>
@@ -447,21 +447,21 @@ const App = () => {
                           <div key={locIndex} style={{
                             background: '#f8f9fa',
                             border: '1px solid #dee2e6',
-                            borderRadius: '12px',
-                            padding: 'clamp(8px, 2vw, 12px)',
-                            marginBottom: 'clamp(6px, 1.5vw, 8px)'
+                            borderRadius: '10px',
+                            padding: 'clamp(6px, 1.5vw, 10px)',
+                            marginBottom: 'clamp(5px, 1.2vw, 7px)'
                           }}>
                             <h4 style={{ 
-                              margin: '0 0 clamp(6px, 1.5vw, 8px) 0', 
+                              margin: '0 0 clamp(5px, 1.2vw, 7px) 0', 
                               color: '#343a40', 
-                              fontSize: 'clamp(14px, 3vw, 16px)' 
+                              fontSize: 'clamp(13px, 2.8vw, 15px)' 
                             }}>
                               {location.name}
                             </h4>
                             {location.address && (
                               <p style={{ 
-                                margin: 'clamp(2px, 0.5vw, 4px) 0', 
-                                fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                margin: 'clamp(2px, 0.5vw, 3px) 0', 
+                                fontSize: 'clamp(10px, 2vw, 12px)', 
                                 color: '#6c757d' 
                               }}>
                                 📍 {location.address}
@@ -469,8 +469,8 @@ const App = () => {
                             )}
                             {location.phone && (
                               <p style={{ 
-                                margin: 'clamp(2px, 0.5vw, 4px) 0', 
-                                fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                margin: 'clamp(2px, 0.5vw, 3px) 0', 
+                                fontSize: 'clamp(10px, 2vw, 12px)', 
                                 color: '#6c757d' 
                               }}>
                                 📞 {location.phone}
@@ -478,27 +478,27 @@ const App = () => {
                             )}
                             {location.openingHours && (
                               <p style={{ 
-                                margin: 'clamp(2px, 0.5vw, 4px) 0', 
-                                fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                margin: 'clamp(2px, 0.5vw, 3px) 0', 
+                                fontSize: 'clamp(10px, 2vw, 12px)', 
                                 color: '#6c757d' 
                               }}>
                                 🕒 {location.openingHours}
                               </p>
                             )}
                             {location.highlights && location.highlights.length > 0 && (
-                              <div style={{ margin: 'clamp(6px, 1.5vw, 8px) 0' }}>
+                              <div style={{ margin: 'clamp(5px, 1.2vw, 7px) 0' }}>
                                 <p style={{ 
-                                  margin: '0 0 clamp(2px, 0.5vw, 4px) 0', 
+                                  margin: '0 0 clamp(2px, 0.5vw, 3px) 0', 
                                   fontWeight: 600, 
-                                  fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                  fontSize: 'clamp(10px, 2vw, 12px)', 
                                   color: '#495057' 
                                 }}>
                                   ✨ Điểm nổi bật:
                                 </p>
                                 <ul style={{ 
                                   margin: 0, 
-                                  paddingLeft: 'clamp(12px, 3vw, 16px)', 
-                                  fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                  paddingLeft: 'clamp(10px, 2.5vw, 14px)', 
+                                  fontSize: 'clamp(10px, 2vw, 12px)', 
                                   color: '#6c757d' 
                                 }}>
                                   {location.highlights.map((highlight, hIndex) => (
@@ -515,10 +515,10 @@ const App = () => {
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '8px',
-                                padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px)',
-                                fontSize: 'clamp(10px, 2vw, 12px)',
+                                padding: 'clamp(3px, 0.8vw, 5px) clamp(6px, 1.5vw, 10px)',
+                                fontSize: 'clamp(9px, 1.8vw, 11px)',
                                 cursor: 'pointer',
-                                marginTop: 'clamp(6px, 1.5vw, 8px)'
+                                marginTop: 'clamp(5px, 1.2vw, 7px)'
                               }}
                             >
                               Chọn địa điểm này
@@ -526,8 +526,8 @@ const App = () => {
                           </div>
                         ))}
                         <p style={{ 
-                          margin: 'clamp(6px, 1.5vw, 8px) 0 0 0', 
-                          fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                          margin: 'clamp(5px, 1.2vw, 7px) 0 0 0', 
+                          fontSize: 'clamp(10px, 2vw, 12px)', 
                           color: '#6c757d' 
                         }}>
                           Bạn muốn chọn địa điểm nào?
@@ -536,7 +536,7 @@ const App = () => {
                     ) : (
                       <div>
                         <p style={{ 
-                          margin: '0 0 clamp(8px, 2vw, 12px) 0', 
+                          margin: '0 0 clamp(6px, 1.5vw, 10px) 0', 
                           fontWeight: 600, 
                           color: '#495057' 
                         }}>
@@ -560,10 +560,10 @@ const App = () => {
                   <div style={{
                     background: 'white',
                     border: '1px solid #e9ecef',
-                    borderRadius: '18px 18px 18px 4px',
+                    borderRadius: '16px 16px 16px 4px',
                     maxWidth: '80%',
-                    padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px)',
-                    fontSize: 'clamp(12px, 2.5vw, 14px)',
+                    padding: 'clamp(6px, 1.5vw, 10px) clamp(10px, 2.5vw, 14px)',
+                    fontSize: 'clamp(11px, 2.3vw, 13px)',
                     lineHeight: 1.4,
                     color: '#495057'
                   }}>
@@ -590,25 +590,25 @@ const App = () => {
               <div style={{
                 display: 'flex',
                 justifyContent: 'flex-start',
-                marginBottom: 'clamp(8px, 2vw, 12px)'
+                marginBottom: 'clamp(6px, 1.5vw, 10px)'
               }}>
                 <div style={{
                   background: 'white',
                   border: '1px solid #e9ecef',
-                  borderRadius: '18px 18px 18px 4px',
-                  padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px)'
+                  borderRadius: '16px 16px 16px 4px',
+                  padding: 'clamp(6px, 1.5vw, 10px) clamp(10px, 2.5vw, 14px)'
                 }}>
                   <div style={{
                     display: 'flex',
-                    gap: 'clamp(3px, 0.8vw, 4px)',
+                    gap: 'clamp(2px, 0.6vw, 3px)',
                     alignItems: 'center'
                   }}>
                     {[0, 1, 2].map((i) => (
                       <div
                         key={i}
                         style={{
-                          width: 'clamp(6px, 1.5vw, 8px)',
-                          height: 'clamp(6px, 1.5vw, 8px)',
+                          width: 'clamp(5px, 1.2vw, 7px)',
+                          height: 'clamp(5px, 1.2vw, 7px)',
                           borderRadius: '50%',
                           background: '#6c757d',
                           animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite`
@@ -628,26 +628,26 @@ const App = () => {
               borderTop: '1px solid #e9ecef'
             }}>
               <div style={{
-                padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px) clamp(2px, 0.5vw, 4px)',
-                fontSize: 'clamp(10px, 2vw, 11px)',
+                padding: 'clamp(5px, 1.2vw, 7px) clamp(10px, 2.5vw, 14px) clamp(2px, 0.5vw, 3px)',
+                fontSize: 'clamp(9px, 1.8vw, 10px)',
                 color: '#6c757d',
                 fontWeight: 500
               }}>
                 💬 Câu hỏi trước:
               </div>
               <div style={{
-                padding: '0 clamp(8px, 2vw, 12px) clamp(6px, 1.5vw, 8px)',
+                padding: '0 clamp(6px, 1.5vw, 10px) clamp(5px, 1.2vw, 7px)',
                 display: 'flex',
                 flexWrap: 'wrap',
                 gap: 'clamp(3px, 0.8vw, 4px)',
-                maxHeight: 'clamp(50px, 15vw, 60px)',
+                maxHeight: 'clamp(40px, 12vw, 50px)',
                 overflowY: 'auto'
               }}>
                 {previousQuestions.slice(0, 8).map((question, idx) => (
                   <div key={idx} style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: 'clamp(3px, 0.8vw, 4px)' 
+                    gap: 'clamp(2px, 0.6vw, 3px)' 
                   }}>
                     <button
                       aria-label={`Gửi lại câu hỏi: ${question}`}
@@ -657,18 +657,18 @@ const App = () => {
                       style={{
                         background: '#fff',
                         border: '1px solid #dee2e6',
-                        borderRadius: '10px',
-                        padding: 'clamp(3px, 0.8vw, 4px) clamp(6px, 1.5vw, 8px)',
-                        fontSize: 'clamp(10px, 2vw, 11px)',
+                        borderRadius: '8px',
+                        padding: 'clamp(2px, 0.6vw, 3px) clamp(5px, 1.2vw, 7px)',
+                        fontSize: 'clamp(9px, 1.8vw, 10px)',
                         cursor: 'pointer',
                         color: '#495057',
                         transition: 'all 0.15s ease',
                         whiteSpace: 'nowrap',
-                        maxWidth: 'clamp(80px, 25vw, 100px)',
+                        maxWidth: 'clamp(70px, 22vw, 90px)',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         lineHeight: '1.2',
-                        height: 'clamp(18px, 5vw, 22px)',
+                        height: 'clamp(16px, 4vw, 20px)',
                         display: 'flex',
                         alignItems: 'center',
                         flexShrink: 0
@@ -696,9 +696,9 @@ const App = () => {
                         background: '#fff',
                         border: '1px solid #dee2e6',
                         borderRadius: '50%',
-                        width: 'clamp(16px, 4vw, 20px)',
-                        height: 'clamp(16px, 4vw, 20px)',
-                        fontSize: 'clamp(8px, 2vw, 10px)',
+                        width: 'clamp(14px, 3.5vw, 18px)',
+                        height: 'clamp(14px, 3.5vw, 18px)',
+                        fontSize: 'clamp(7px, 1.8vw, 9px)',
                         cursor: 'pointer',
                         color: '#dc3545',
                         display: 'flex',
@@ -724,21 +724,21 @@ const App = () => {
           )}
 
           <div style={{
-            padding: 'clamp(12px, 3vw, 16px)',
+            padding: 'clamp(10px, 2.5vw, 14px)',
             backgroundColor: '#ffffff',
             borderTop: previousQuestions.length > 0 ? 'none' : '1px solid #e9ecef'
           }}>
             <div style={{
-              fontSize: 'clamp(10px, 2vw, 11px)',
+              fontSize: 'clamp(9px, 1.8vw, 10px)',
               color: input.length > 450 ? '#dc3545' : '#6c757d',
               textAlign: 'right',
-              marginBottom: 'clamp(6px, 1.5vw, 8px)'
+              marginBottom: 'clamp(5px, 1.2vw, 7px)'
             }}>
               {input.length}/500
             </div>
             <div style={{ 
               display: 'flex', 
-              gap: 'clamp(6px, 1.5vw, 8px)',
+              gap: 'clamp(5px, 1.2vw, 7px)',
               flexWrap: 'wrap' 
             }}>
               <input
@@ -755,12 +755,12 @@ const App = () => {
                 style={{
                   flex: 1,
                   border: `1px solid ${input.length > 450 ? '#ffc107' : '#dee2e6'}`,
-                  borderRadius: 'clamp(16px, 4vw, 20px)',
-                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
-                  fontSize: 'clamp(12px, 2.5vw, 14px)',
+                  borderRadius: 'clamp(14px, 3.5vw, 18px)',
+                  padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 14px)',
+                  fontSize: 'clamp(11px, 2.3vw, 13px)',
                   outline: 'none',
                   transition: 'border-color 0.2s ease',
-                  minWidth: '150px'
+                  minWidth: '140px'
                 }}
                 onFocus={(e) => {
                   e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#667eea';
@@ -777,9 +777,9 @@ const App = () => {
                   background: isTyping || !input.trim() ? '#6c757d' : 'linear-gradient(135deg, #667eea, #764ba2)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: 'clamp(16px, 4vw, 20px)',
-                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
-                  fontSize: 'clamp(12px, 2.5vw, 14px)',
+                  borderRadius: 'clamp(14px, 3.5vw, 18px)',
+                  padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 14px)',
+                  fontSize: 'clamp(11px, 2.3vw, 13px)',
                   cursor: isTyping || !input.trim() ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
                   whiteSpace: 'nowrap'
@@ -805,32 +805,43 @@ const App = () => {
           }
           
           div::-webkit-scrollbar {
-            width: clamp(4px, 1vw, 6px);
+            width: clamp(3px, 0.8vw, 5px);
           }
           
           div::-webkit-scrollbar-track {
             background: #f1f1f1;
-            border-radius: 10px;
+            border-radius: 8px;
           }
           
           div::-webkit-scrollbar-thumb {
             background: #c1c1c1;
-            border-radius: 10px;
+            border-radius: 8px;
           }
           
           div::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
           }
 
+          /* Màn hình lớn (>1024px) */
           .chat-box {
             height: clamp(400px, 80vh, 600px);
           }
-
           .chat-box.no-quick-actions {
-            height: clamp(380px, 75vh, 550px);
+            height: clamp(370px, 75vh, 540px);
           }
 
-          @media (max-width: 768px) {
+          /* Tablet (768px-1024px) */
+          @media (max-width: 1024px) {
+            .chat-box {
+              height: clamp(360px, 80vh, 500px);
+            }
+            .chat-box.no-quick-actions {
+              height: clamp(340px, 75vh, 480px);
+            }
+          }
+
+          /* Màn hình nhỏ (480px-767px) */
+          @media (max-width: 767px) {
             button[aria-label="Đóng chat"], button[aria-label="Mở chat"] {
               bottom: 1vh;
               right: 1vw;
@@ -839,22 +850,55 @@ const App = () => {
               bottom: calc(1vh + clamp(50px, 10vw, 60px) + 0.5vh);
               right: 1vw;
               width: clamp(250px, 95vw, 360px);
-              height: clamp(350px, 85vh, 500px);
+              height: clamp(340px, 85vh, 460px);
             }
             .chat-box.no-quick-actions {
-              height: clamp(320px, 80vh, 480px);
+              height: clamp(320px, 80vh, 440px);
             }
           }
 
-          @media (max-width: 480px) {
-            div[style*="flex: 1; padding: clamp(12px, 3vw, 16px)"] {
-              padding: clamp(8px, 2vw, 12px);
+          /* Màn hình rất nhỏ (<480px) */
+          @media (max-width: 479px) {
+            button[aria-label="Đóng chat"], button[aria-label="Mở chat"] {
+              bottom: 0.5vh;
+              right: 0.5vw;
+              width: clamp(40px, 12vw, 50px);
+              height: clamp(40px, 12vw, 50px);
+              fontSize: clamp(16px, 5vw, 20px);
             }
-            div[style*="padding: clamp(12px, 3vw, 16px); background-color: #ffffff"] {
-              padding: clamp(8px, 2vw, 12px);
+            .chat-box {
+              bottom: calc(0.5vh + clamp(40px, 12vw, 50px) + 0.3vh);
+              right: 0.5vw;
+              width: clamp(220px, 96vw, 320px);
+              height: clamp(300px, 90vh, 400px);
+            }
+            .chat-box.no-quick-actions {
+              height: clamp(280px, 85vh, 380px);
+            }
+            div[style*="flex: 1; padding: clamp(10px, 2.5vw, 14px)"] {
+              padding: clamp(6px, 2vw, 10px);
+            }
+            div[style*="padding: clamp(10px, 2.5vw, 14px); background-color: #ffffff"] {
+              padding: clamp(6px, 2vw, 10px);
             }
             input[placeholder="Nhập tin nhắn... (tối đa 500 ký tự)"] {
-              min-width: 120px;
+              min-width: 100px;
+              padding: clamp(5px, 1.2vw, 7px) clamp(8px, 2vw, 12px);
+              fontSize: clamp(10px, 2vw, 12px);
+            }
+            button[aria-label="Gửi tin nhắn"] {
+              padding: clamp(5px, 1.2vw, 7px) clamp(8px, 2vw, 12px);
+              fontSize: clamp(10px, 2vw, 12px);
+            }
+            div[style*="marginTop: 'clamp(12px, 3vw, 16px)'"] {
+              margin-top: clamp(8px, 2vw, 12px);
+            }
+            p[style*="fontSize: 'clamp(13px, 2.8vw, 15px)'"] {
+              font-size: clamp(12px, 2.5vw, 14px);
+            }
+            button[style*="fontSize: 'clamp(11px, 2.3vw, 13px)'"] {
+              font-size: clamp(10px, 2vw, 12px);
+              padding: clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 9px);
             }
           }
         `}
