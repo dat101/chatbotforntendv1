@@ -167,7 +167,7 @@ const App = () => {
             locations, 
             sender: 'bot', 
             isTyped: false, 
-            id: botMessageId // Sửa lỗi: dùng botMessageId thay vì boolMessageId
+            id: botMessageId
           }]);
         } else {
           setMessages((prev) => [...prev, { 
@@ -827,7 +827,7 @@ const App = () => {
           }
 
           .chat-box.no-quick-actions {
-            height: clamp(350px, 70vh, 500px);
+            height: clamp(380px, 75vh, 550px);
           }
 
           @media (max-width: 768px) {
@@ -842,7 +842,7 @@ const App = () => {
               height: clamp(350px, 85vh, 500px);
             }
             .chat-box.no-quick-actions {
-              height: clamp(300px, 75vh, 450px);
+              height: clamp(320px, 80vh, 480px);
             }
           }
 
