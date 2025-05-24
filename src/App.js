@@ -21,7 +21,7 @@ const App = () => {
   const backendUrl = 'https://chatbot-backend-1-ja1c.onrender.com/api/chat';
 
   const generateSessionId = () => {
-    return 'sess_' + Date.now().toString(36) + Math.random().toString(1116).substr(2);
+    return 'sess_' + Date.now().toString(36) + Math.random().toString(36).substr(2);
   };
 
   useEffect(() => {
@@ -167,7 +167,7 @@ const App = () => {
             locations, 
             sender: 'bot', 
             isTyped: false, 
-            id: boolMessageId 
+            id: botMessageId // Sửa lỗi: dùng botMessageId thay vì boolMessageId
           }]);
         } else {
           setMessages((prev) => [...prev, { 
