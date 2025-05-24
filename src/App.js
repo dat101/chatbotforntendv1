@@ -9,17 +9,15 @@ const debounce = (func, wait) => {
 };
 
 const QuickActions = ({ questions, onSelect, onDelete }) => (
-  <div className="bg-gray-100 border-t border-gray-200">
-    <div className="px-3 py-1 text-xs font-medium text-gray-600">
-      💬 Câu hỏi trước:
-    </div>
-    <div className="flex flex-wrap gap-1 px-3 pb-2 max-h-12 overflow-y-auto">
+  <div className="quick-actions">
+    <div className="quick-actions-title">💬 Câu hỏi trước:</div>
+    <div className="quick-actions-list">
       {questions.map((question, idx) => (
-        <div key={idx} className="flex items-center gap-1">
+        <div key={idx} className="quick-action-item">
           <button
             aria-label={`Gửi lại câu hỏi: ${question}`}
             onClick={() => onSelect(question)}
-            className="bg-white border border-gray-300 rounded-lg px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 hover:-translate-y-0.5 hover:shadow-sm transition-all duration-150 truncate max-w-[90px]"
+            className="quick-action-button"
             title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
           >
             {question}
@@ -27,7 +25,7 @@ const QuickActions = ({ questions, onSelect, onDelete }) => (
           <button
             aria-label={`Xóa câu hỏi: ${question}`}
             onClick={() => onDelete(question)}
-            className="bg-white border border-gray-300 rounded-full w-5 h-5 flex items-center justify-center text-red-500 text-xs hover:bg-red-500 hover:text-white transition-all duration-150"
+            className="quick-action-delete"
           >
             🗑️
           </button>
@@ -225,14 +223,6 @@ const App = () => {
     sendMessage(input);
   };
 
-  const resetChat = () => {
-    setMessages([]);
-    setInput('');
-    setIsTyping(false);
-    setSessionId(generateSessionId());
-    setAllUserQuestions(prev => [...prev]);
-  };
-
   const suggestions = [
     { emoji: '🏛️', text: 'văn hóa' },
     { emoji: '🎉', text: 'sự kiện' },
@@ -243,44 +233,49 @@ const App = () => {
   ];
 
   return (
-    <div className="font-sans h-screen bg-white relative overflow-hidden">
+    <div className="app-container">
       <button
         aria-label={isChatOpen ? "Đóng chat" : "Mở chat"}
         onClick={() => setIsChatOpen(!isChatOpen)}
-        className="fixed bottom-4 right-4 w-14 h-14 rounded-full bg-gradient-to-br from-red-400 to-orange-500 text-white text-2xl flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 z-50"
+        className="toggle-button"
       >
         {isChatOpen ? '✕' : '💬'}
       </button>
 
       {isChatOpen && (
-        <div className="fixed bottom-20 right-4 w-full max-w-[360px] h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col animate-slide-up z-40 sm:max-w-[400px] sm:h-[600px]">
-          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-4 rounded-t-2xl flex justify-between items-center">
+        <div className="chat-container">
+          <div className="chat-header">
             <div>
-              <h3 className="text-lg font-semibold m-0">Trợ lý Du lịch Khánh Hòa</h3>
-              <p className="text-sm opacity-90 m-0">Hỗ trợ bạn mọi lúc</p>
+              <h3>Trợ lý Du lịch Khánh Hòa</h3>
+              <p>Hỗ trợ bạn mọi lúc</p>
             </div>
             {messages.length > 0 && (
               <button
                 aria-label="Làm mới cuộc trò chuyện"
-                onClick={resetChat}
-                className="bg-white/20 border border-white/30 rounded-lg px-2 py-1 text-xs hover:bg-white/30 transition-all duration-200"
+                onClick={() => {
+                  setMessages([]);
+                  setInput('');
+                  setIsTyping(false);
+                  setSessionId(generateSessionId());
+                }}
+                className="reset-button"
               >
                 🔄 Làm mới
               </button>
             )}
           </div>
 
-          <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+          <div className="chat-body">
             {messages.length === 0 && (
-              <div className="text-center text-gray-600 mt-4">
-                <p className="text-sm">👋 Xin chào! Tôi có thể giúp bạn tìm hiểu về:</p>
-                <div className="flex flex-col gap-2 mt-3">
+              <div className="welcome-message">
+                <p>👋 Xin chào! Tôi có thể giúp bạn tìm hiểu về:</p>
+                <div className="suggestions">
                   {suggestions.map((item, idx) => (
                     <button
                       key={idx}
                       aria-label={`Tìm hiểu về ${item.text}`}
                       onClick={() => sendMessage(`Tôi muốn tìm hiểu về ${item.text}`)}
-                      className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:-translate-y-0.5 hover:shadow-sm transition-all duration-200"
+                      className="suggestion-button"
                     >
                       {item.emoji} {item.text.charAt(0).toUpperCase() + item.text.slice(1)}
                     </button>
@@ -292,42 +287,27 @@ const App = () => {
             {messages.map((msg, index) => (
               <div
                 key={msg.id || index}
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} mb-3`}
+                className={`message ${msg.sender === 'user' ? 'user' : 'bot'}`}
               >
                 {msg.sender === 'user' ? (
-                  <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-3 rounded-2xl rounded-br-[4px] max-w-[80%] text-sm leading-relaxed">
-                    {msg.text}
-                  </div>
+                  <div className="message-content user">{msg.text}</div>
                 ) : msg.locations ? (
-                  <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-[4px] max-w-[90%] p-4 text-sm">
+                  <div className="message-content bot">
                     {msg.isTyped ? (
                       <>
-                        <p className="font-semibold text-gray-800 mb-3">
+                        <p className="locations-title">
                           Tìm thấy {msg.locations.length} địa điểm:
                         </p>
                         {msg.locations.map((location, locIndex) => (
-                          <div
-                            key={locIndex}
-                            className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-2"
-                          >
-                            <h4 className="text-base font-semibold text-gray-900 m-0 mb-2">
-                              {location.name}
-                            </h4>
-                            {location.address && (
-                              <p className="text-xs text-gray-600 m-0 mb-1">📍 {location.address}</p>
-                            )}
-                            {location.phone && (
-                              <p className="text-xs text-gray-600 m-0 mb-1">📞 {location.phone}</p>
-                            )}
-                            {location.openingHours && (
-                              <p className="text-xs text-gray-600 m-0 mb-1">🕒 {location.openingHours}</p>
-                            )}
+                          <div key={locIndex} className="location-card">
+                            <h4>{location.name}</h4>
+                            {location.address && <p>📍 {location.address}</p>}
+                            {location.phone && <p>📞 {location.phone}</p>}
+                            {location.openingHours && <p>🕒 {location.openingHours}</p>}
                             {location.highlights && location.highlights.length > 0 && (
-                              <div className="mt-2">
-                                <p className="text-xs font-semibold text-gray-700 m-0 mb-1">
-                                  ✨ Điểm nổi bật:
-                                </p>
-                                <ul className="list-disc pl-4 text-xs text-gray-600 m-0">
+                              <div>
+                                <p className="highlights-title">✨ Điểm nổi bật:</p>
+                                <ul>
                                   {location.highlights.map((highlight, hIndex) => (
                                     <li key={hIndex}>{highlight}</li>
                                   ))}
@@ -337,18 +317,16 @@ const App = () => {
                             <button
                               aria-label={`Chọn ${location.name}`}
                               onClick={() => handleLocationSelect(location.name)}
-                              className="mt-2 bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-lg px-3 py-1 text-xs hover:bg-green-600 transition-all duration-200"
+                              className="location-button"
                             >
                               Chọn địa điểm này
                             </button>
                           </div>
                         ))}
-                        <p className="text-xs text-gray-600 mt-2">
-                          Bạn muốn chọn địa điểm nào?
-                        </p>
+                        <p className="location-prompt">Bạn muốn chọn địa điểm nào?</p>
                       </>
                     ) : (
-                      <p className="font-semibold text-gray-800">
+                      <p className="locations-title">
                         <TypewriterText
                           text={`Tìm thấy ${msg.locations.length} địa điểm:`}
                           onComplete={() => {
@@ -365,7 +343,7 @@ const App = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-[4px] max-w-[80%] p-3 text-sm text-gray-800 leading-relaxed">
+                  <div className="message-content bot">
                     {msg.isTyped ? (
                       msg.text
                     ) : (
@@ -386,16 +364,12 @@ const App = () => {
             ))}
 
             {isTyping && (
-              <div className="flex justify-start mb-3">
-                <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-[4px] p-3">
-                  <div className="flex gap-1 items-center">
-                    {[0, 1, 2].map(i => (
-                      <div
-                        key={i}
-                        className="w-2 h-2 rounded-full bg-gray-500 animate-pulse"
-                        style={{ animationDelay: `${i * 0.2}s` }}
-                      />
-                    ))}
+              <div className="message bot">
+                <div className="message-content bot">
+                  <div className="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                   </div>
                 </div>
               </div>
@@ -411,12 +385,11 @@ const App = () => {
             />
           )}
 
-          <div className="p-4 bg-white border-t border-gray-200">
-            <div className="text-xs text-right text-gray-600 mb-2">
-              {input.length}/500
-              {input.length > 450 && <span className="text-red-500"> (gần giới hạn)</span>}
+          <div className="chat-footer">
+            <div className="char-count">
+              {input.length}/500 {input.length > 450 && <span>(gần giới hạn)</span>}
             </div>
-            <div className="flex gap-2 flex-wrap">
+            <div className="input-group">
               <input
                 type="text"
                 value={input}
@@ -431,13 +404,13 @@ const App = () => {
                   }
                 }}
                 placeholder="Nhập tin nhắn... (tối đa 500 ký tự)"
-                className={`flex-1 border ${input.length > 450 ? 'border-yellow-400' : 'border-gray-300'} rounded-full px-4 py-2 text-sm outline-none focus:border-indigo-500 transition-all duration-200 min-w-[120px]`}
+                className="chat-input"
               />
               <button
                 aria-label="Gửi tin nhắn"
                 onClick={handleSubmit}
                 disabled={isTyping || !input.trim()}
-                className={`bg-gradient-to-br ${isTyping || !input.trim() ? 'from-gray-500 to-gray-600' : 'from-indigo-500 to-purple-600'} text-white rounded-full px-4 py-2 text-sm ${isTyping || !input.trim() ? 'cursor-not-allowed' : 'hover:bg-indigo-600'} transition-all duration-200`}
+                className="send-button"
               >
                 Gửi
               </button>
@@ -448,33 +421,410 @@ const App = () => {
 
       <style>
         {`
+          .app-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            background: #f5f5f5;
+            position: relative;
+            overflow: hidden;
+          }
+
+          .toggle-button {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+          }
+          .toggle-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+          }
+
+          .chat-container {
+            position: fixed;
+            bottom: 5.5rem;
+            right: 1.5rem;
+            width: 100%;
+            max-width: 380px;
+            height: 550px;
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            animation: slide-up 0.3s ease-out;
+            z-index: 999;
+          }
+          @media (max-width: 480px) {
+            .chat-container {
+              max-width: 340px;
+              height: 480px;
+              bottom: 5rem;
+            }
+          }
+
+          .chat-header {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-top-left-radius: 1.5rem;
+            border-top-right-radius: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .chat-header h3 {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+          }
+          .chat-header p {
+            margin: 0.25rem 0 0;
+            font-size: 0.75rem;
+            opacity: 0.9;
+          }
+          .reset-button {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 0.5rem;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+          }
+          .reset-button:hover {
+            background: rgba(255,255,255,0.25);
+          }
+
+          .chat-body {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background: #fafafa;
+          }
+          .chat-body::-webkit-scrollbar {
+            width: 5px;
+          }
+          .chat-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+          }
+          .chat-body::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+          }
+          .chat-body::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+          }
+
+          .welcome-message {
+            text-align: center;
+            color: #4b5563;
+            margin-top: 1rem;
+          }
+          .welcome-message p {
+            font-size: 0.875rem;
+            margin: 0 0 0.75rem;
+          }
+          .suggestions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+          .suggestion-button {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+          .suggestion-button:hover {
+            background: #f3f4f6;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+          }
+
+          .message {
+            display: flex;
+            margin-bottom: 0.75rem;
+          }
+          .message.user {
+            justify-content: flex-end;
+          }
+          .message.bot {
+            justify-content: flex-start;
+          }
+          .message-content {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            line-height: 1.4;
+          }
+          .message-content.user {
+            background: linear-gradient(135deg, #7c3aed, #db2777);
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+          }
+          .message-content.bot {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-bottom-left-radius: 0.25rem;
+            color: #374151;
+          }
+
+          .locations-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 0.75rem;
+          }
+          .location-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+          }
+          .location-card h4 {
+            margin: 0 0 0.5rem;
+            font-size: 1rem;
+            color: #1f2937;
+          }
+          .location-card p {
+            margin: 0.125rem 0;
+            font-size: 0.75rem;
+            color: #6b7280;
+          }
+          .highlights-title {
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: #374151;
+            margin: 0.5rem 0 0.25rem;
+          }
+          .location-card ul {
+            margin: 0;
+            padding-left: 1rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+          }
+          .location-button {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: background 0.2s;
+          }
+          .location-button:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+          }
+          .location-prompt {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin: 0.5rem 0 0;
+          }
+
+          .typing-indicator {
+            display: flex;
+            gap: 0.25rem;
+            align-items: center;
+          }
+          .typing-indicator span {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background: #6b7280;
+            animation: pulse 1.4s ease-in-out infinite;
+          }
+          .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+          }
+          .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+          }
+
+          .quick-actions {
+            background: #f3f4f6;
+            padding: 0.25rem 0.75rem;
+            border-top: 1px solid #e5e7eb;
+          }
+          .quick-actions-title {
+            font-size: 0.6875rem;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+          }
+          .quick-actions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            max-height: 2.5rem;
+            overflow-y: auto;
+          }
+          .quick-actions-list::-webkit-scrollbar {
+            width: 4px;
+          }
+          .quick-actions-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+          }
+          .quick-actions-list::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+          }
+          .quick-actions-list::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+          }
+          .quick-action-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+          }
+          .quick-action-button {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 0.125rem 0.5rem;
+            font-size: 0.6875rem;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.15s;
+            max-width: 5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            line-height: 1.2;
+            height: 1.25rem;
+            display: flex;
+            align-items: center;
+          }
+          .quick-action-button:hover {
+            background: #f3f4f6;
+            transform: translateY(-1px);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+          }
+          .quick-action-delete {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 50%;
+            width: 1.125rem;
+            height: 1.125rem;
+            font-size: 0.625rem;
+            color: #ef4444;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+          }
+          .quick-action-delete:hover {
+            background: #ef4444;
+            color: white;
+          }
+
+          .chat-footer {
+            padding: 0.75rem;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+          }
+          .char-count {
+            font-size: 0.6875rem;
+            color: #6b7280;
+            text-align: right;
+            margin-bottom: 0.25rem;
+          }
+          .char-count span {
+            color: #ef4444;
+          }
+          .input-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+          }
+          .chat-input {
+            flex: 1;
+            border: 1px solid #e5e7eb;
+            border-radius: 1.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.2s;
+            min-width: 120px;
+          }
+          .chat-input:focus {
+            border-color: #7c3aed;
+          }
+          .chat-input[aria-invalid="true"] {
+            border-color: #facc15;
+          }
+          .send-button {
+            background: linear-gradient(135deg, #7c3aed, #db2777);
+            color: white;
+            border: none;
+            border-radius: 1.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+          }
+          .send-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+          }
+          .send-button:not(:disabled):hover {
+            background: linear-gradient(135deg, #6d28d9, #c026d3);
+          }
+
           @keyframes slide-up {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-slide-up {
-            animation: slide-up 0.3s ease-out;
-          }
-          .animate-pulse {
-            animation: pulse 1.4s ease-in-out infinite;
           }
           @keyframes pulse {
             0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
             40% { transform: scale(1); opacity: 1; }
           }
-          .max-h-12::-webkit-scrollbar {
-            width: 4px;
-          }
-          .max-h-12::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-          }
-          .max-h-12::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 10px;
-          }
-          .max-h-12::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
+
+          @media (max-width: 480px) {
+            .toggle-button {
+              bottom: 1rem;
+              right: 1rem;
+              width: 3rem;
+              height: 3rem;
+              font-size: 1.25rem;
+            }
+            .chat-header {
+              padding: 0.75rem 1rem;
+            }
+            .chat-body {
+              padding: 0.75rem;
+            }
+            .chat-footer {
+              padding: 0.5rem;
+            }
+            .chat-input {
+              min-width: 100px;
+            }
           }
         `}
       </style>
