@@ -574,169 +574,161 @@ const App = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          <div style={{
-            borderTop: previousQuestions.length > 0 ? '1px solid #e9ecef' : 'none',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            {previousQuestions.length > 0 && (
-              <>
-                <div style={{
-                  padding: '8px 16px 4px 16px',
-                  fontSize: '11px',
-                  color: '#6c757d',
-                  backgroundColor: '#f8f9fa',
-                  fontWeight: 500
-                }}>
-                  💬 Câu hỏi trước:
-                </div>
-                <div style={{
-                  padding: '0 12px 8px 12px',
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '4px',
-                  backgroundColor: '#f8f9fa',
-                  maxHeight: '60px',
-                  overflowY: 'auto'
-                }}>
-                  {previousQuestions.slice(0, 8).map((question, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <button
-                        aria-label={`Gửi lại câu hỏi: ${question}`}
-                        tabIndex={0}
-                        onClick={() => handleSuggestionClick(question)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
-                        style={{
-                          background: '#fff',
-                          border: '1px solid #dee2e6',
-                          borderRadius: '10px',
-                          padding: '4px 8px',
-                          fontSize: '11px',
-                          cursor: 'pointer',
-                          color: '#495057',
-                          transition: 'all 0.15s ease',
-                          whiteSpace: 'nowrap',
-                          maxWidth: '100px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          lineHeight: '1.2',
-                          height: '22px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          flexShrink: 0
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.background = '#e9ecef';
-                          e.target.style.transform = 'translateY(-1px)';
-                          e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.background = '#fff';
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = 'none';
-                        }}
-                        title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
-                      >
-                        {question}
-                      </button>
-                      <button
-                        aria-label={`Xóa câu hỏi: ${question}`}
-                        tabIndex={0}
-                        onClick={() => handleDeleteQuestion(question)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleDeleteQuestion(question)}
-                        style={{
-                          background: '#fff',
-                          border: '1px solid #dee2e6',
-                          borderRadius: '50%',
-                          width: '20px',
-                          height: '20px',
-                          fontSize: '10px',
-                          cursor: 'pointer',
-                          color: '#dc3545',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.15s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.background = '#dc3545';
-                          e.target.style.color = '#fff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.background = '#fff';
-                          e.target.style.color = '#dc3545';
-                        }}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-
+          {previousQuestions.length > 0 && (
             <div style={{
-              padding: '16px',
-              borderTop: '1px solid #e9ecef',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px'
+              backgroundColor: '#f8f9fa',
+              borderTop: '1px solid #e9ecef'
             }}>
               <div style={{
+                padding: '8px 16px 4px 16px',
                 fontSize: '11px',
-                color: input.length > 450 ? '#dc3545' : '#6c757d',
-                textAlign: 'right',
-                margin: 0
+                color: '#6c757d',
+                fontWeight: 500
               }}>
-                {input.length}/500
+                💬 Câu hỏi trước:
               </div>
+              <div style={{
+                padding: '0 12px 8px 12px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '4px',
+                maxHeight: '60px',
+                overflowY: 'auto'
+              }}>
+                {previousQuestions.slice(0, 8).map((question, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <button
+                      aria-label={`Gửi lại câu hỏi: ${question}`}
+                      tabIndex={0}
+                      onClick={() => handleSuggestionClick(question)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '10px',
+                        padding: '4px 8px',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        color: '#495057',
+                        transition: 'all 0.15s ease',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '100px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        lineHeight: '1.2',
+                        height: '22px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#e9ecef';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#fff';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                      title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
+                    >
+                      {question}
+                    </button>
+                    <button
+                      aria-label={`Xóa câu hỏi: ${question}`}
+                      tabIndex={0}
+                      onClick={() => handleDeleteQuestion(question)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleDeleteQuestion(question)}
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        fontSize: '10px',
+                        cursor: 'pointer',
+                        color: '#dc3545',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#dc3545';
+                        e.target.style.color = '#fff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#fff';
+                        e.target.style.color = '#dc3545';
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[\n\t\r]/g, ' ');
-                    if (value.length <= 500) {
-                      setInput(value);
-                    }
-                  }}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Nhập tin nhắn... (tối đa 500 ký tự)"
-                  style={{
-                    flex: 1,
-                    border: `1px solid ${input.length > 450 ? '#ffc107' : '#dee2e6'}`,
-                    borderRadius: '20px',
-                    padding: '10px 16px',
-                    fontSize: '14px',
-                    outline: 'none',
-                    transition: 'border-color 0.2s ease'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#667eea';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#dee2e6';
-                  }}
-                />
-                <button
-                  aria-label="Gửi tin nhắn"
-                  onClick={handleSubmit}
-                  disabled={isTyping || !input.trim()}
-                  style={{
-                    background: isTyping || !input.trim() ? '#6c757d' : 'linear-gradient(135deg, #667eea, #764ba2)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '20px',
-                    padding: '10px 16px',
-                    fontSize: '14px',
-                    cursor: isTyping || !input.trim() ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  Gửi
-                </button>
-              </div>
+          <div style={{
+            padding: '16px',
+            backgroundColor: '#ffffff',
+            borderTop: previousQuestions.length > 0 ? 'none' : '1px solid #e9ecef'
+          }}>
+            <div style={{
+              fontSize: '11px',
+              color: input.length > 450 ? '#dc3545' : '#6c757d',
+              textAlign: 'right',
+              marginBottom: '8px'
+            }}>
+              {input.length}/500
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[\n\t\r]/g, ' ');
+                  if (value.length <= 500) {
+                    setInput(value);
+                  }
+                }}
+                onKeyPress={handleKeyPress}
+                placeholder="Nhập tin nhắn... (tối đa 500 ký tự)"
+                style={{
+                  flex: 1,
+                  border: `1px solid ${input.length > 450 ? '#ffc107' : '#dee2e6'}`,
+                  borderRadius: '20px',
+                  padding: '10px 16px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#667eea';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#dee2e6';
+                }}
+              />
+              <button
+                aria-label="Gửi tin nhắn"
+                onClick={handleSubmit}
+                disabled={isTyping || !input.trim()}
+                style={{
+                  background: isTyping || !input.trim() ? '#6c757d' : 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '20px',
+                  padding: '10px 16px',
+                  fontSize: '14px',
+                  cursor: isTyping || !input.trim() ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Gửi
+              </button>
             </div>
           </div>
         </div>
