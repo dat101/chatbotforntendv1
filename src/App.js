@@ -8,60 +8,15 @@ const debounce = (func, wait) => {
   };
 };
 
-const QuickActions = ({ questions, onSelect, onDelete }) => (
-  <div className="quick-actions">
-    <div className="quick-actions-title">💬 Câu hỏi trước:</div>
-    <div className="quick-actions-list">
-      {questions.map((question, idx) => (
-        <div key={idx} className="quick-action-item">
-          <button
-            aria-label={`Gửi lại câu hỏi: ${question}`}
-            onClick={() => onSelect(question)}
-            className="quick-action-button"
-            title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
-          >
-            {question}
-          </button>
-          <button
-            aria-label={`Xóa câu hỏi: ${question}`}
-            onClick={() => onDelete(question)}
-            className="quick-action-delete"
-          >
-            🗑️
-          </button>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const TypewriterText = ({ text, onComplete, delay = 30 }) => {
-  const [displayText, setDisplayText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    if (currentIndex < text.length) {
-      const timer = setTimeout(() => {
-        setDisplayText(prev => prev + text[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
-      }, delay);
-      return () => clearTimeout(timer);
-    } else if (onComplete) {
-      onComplete();
-    }
-  }, [currentIndex, text, delay, onComplete]);
-
-  return <span>{displayText}</span>;
-};
-
 const App = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [allUserQuestions, setAllUserQuestions] = useState([]);
   const messagesEndRef = useRef(null);
+  const [typingStates, setTypingStates] = useState({});
+  const [allUserQuestions, setAllUserQuestions] = useState([]);
 
   const backendUrl = 'https://chatbot-backend-1-ja1c.onrender.com/api/chat';
 
@@ -70,7 +25,8 @@ const App = () => {
   };
 
   useEffect(() => {
-    setSessionId(generateSessionId());
+    const newSessionId = generateSessionId();
+    setSessionId(newSessionId);
   }, []);
 
   useEffect(() => {
@@ -86,10 +42,20 @@ const App = () => {
   }, [messages]);
 
   const getPreviousUserQuestions = () => {
+    console.log('allUserQuestions:', allUserQuestions);
     const recentQuestions = allUserQuestions.slice(-6).reverse();
-    return recentQuestions
-      .map(text => text.length > 20 ? text.substring(0, 17) + '...' : text)
-      .filter((item, index, self) => self.indexOf(item) === index);
+    const truncatedMessages = recentQuestions
+      .map((text, index) => ({
+        original: text,
+        truncated: text.length > 20 ? text.substring(0, 17) + '...' : text,
+        index
+      }))
+      .filter((item, index, self) => 
+        self.findIndex(t => t.original === item.original) === index
+      )
+      .map(item => item.truncated);
+    console.log('truncatedMessages:', truncatedMessages);
+    return truncatedMessages;
   };
 
   const parseResponse = (responseText) => {
@@ -120,6 +86,7 @@ const App = () => {
           currentLocation.mapLink = line.replace('Bản đồ:', '').trim();
         } else if (line.startsWith('AI Menu:')) {
           currentLocation.aiMenuLink = line.replace('AI Menu:', '').trim();
+        } else if (line.startsWith('Điểm nổi bật:')) {
         } else if (line.startsWith('-')) {
           currentLocation.highlights.push(line.replace('-', '').trim());
         }
@@ -133,6 +100,25 @@ const App = () => {
     return locations;
   };
 
+  const TypewriterText = ({ text, onComplete, delay = 30 }) => {
+    const [displayText, setDisplayText] = useState('');
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+      if (currentIndex < text.length) {
+        const timer = setTimeout(() => {
+          setDisplayText(prev => prev + text[currentIndex]);
+          setCurrentIndex(prev => prev + 1);
+        }, delay);
+        return () => clearTimeout(timer);
+      } else if (onComplete) {
+        onComplete();
+      }
+    }, [currentIndex, text, delay, onComplete]);
+
+    return <span>{displayText}</span>;
+  };
+
   const sendMessage = debounce(async (message, retries = 3) => {
     if (!message.trim() || isTyping || !sessionId) {
       if (!sessionId) {
@@ -144,8 +130,14 @@ const App = () => {
     const cleanMessage = message.replace(/[\n\t\r]/g, ' ').trim();
     const limitedMessage = cleanMessage.length > 500 ? cleanMessage.substring(0, 500) + '...' : cleanMessage;
 
-    setAllUserQuestions(prev => [...prev, limitedMessage].slice(-20));
-    setMessages(prev => [...prev, { text: limitedMessage, sender: 'user', id: Date.now() }]);
+    setAllUserQuestions(prev => {
+      const updated = [...prev, limitedMessage];
+      return updated.slice(-20);
+    });
+
+    const newMessage = { text: limitedMessage, sender: 'user', id: Date.now() };
+    setMessages((prev) => [...prev, newMessage]);
+
     setInput('');
     setIsTyping(true);
 
@@ -171,14 +163,14 @@ const App = () => {
 
         if (responseText.includes('Tìm thấy')) {
           const locations = parseResponse(responseText);
-          setMessages(prev => [...prev, { 
+          setMessages((prev) => [...prev, { 
             locations, 
             sender: 'bot', 
             isTyped: false, 
             id: botMessageId 
           }]);
         } else {
-          setMessages(prev => [...prev, { 
+          setMessages((prev) => [...prev, { 
             text: responseText, 
             sender: 'bot', 
             isTyped: false, 
@@ -188,9 +180,9 @@ const App = () => {
         break;
       } catch (error) {
         if (attempt === retries) {
-          setMessages(prev => [
+          setMessages((prev) => [
             ...prev,
-            { text: `Lỗi: ${error.message}. Vui lòng thử lại!`, sender: 'bot', isTyped: true, id: Date.now() + 2 }
+            { text: `Lỗi: ${error.message}. Vui lòng thử lại!`, sender: 'bot', isTyped: true, id: Date.now() + 2 },
           ]);
         }
       }
@@ -199,10 +191,12 @@ const App = () => {
   }, 1000);
 
   const handleSuggestionClick = (suggestion) => {
+    console.log('Suggestion clicked:', suggestion);
     const originalMessage = allUserQuestions.find(msg => {
       const truncated = msg.length > 20 ? msg.substring(0, 17) + '...' : msg;
       return truncated === suggestion;
     }) || suggestion;
+    console.log('Original message:', originalMessage);
     sendMessage(originalMessage);
   };
 
@@ -223,59 +217,189 @@ const App = () => {
     sendMessage(input);
   };
 
-  const suggestions = [
-    { emoji: '🏛️', text: 'văn hóa' },
-    { emoji: '🎉', text: 'sự kiện' },
-    { emoji: '🏖️', text: 'địa điểm du lịch' },
-    { emoji: '🍜', text: 'ẩm thực' },
-    { emoji: '🏥', text: 'y tế' },
-    { emoji: '🚌', text: 'tour du lịch' }
-  ];
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  };
+
+  const resetChat = () => {
+    setMessages([]);
+    setInput('');
+    setIsTyping(false);
+    setTypingStates({});
+    const newSessionId = generateSessionId();
+    setSessionId(newSessionId);
+    setAllUserQuestions(prev => [...prev]);
+  };
+
+  const previousQuestions = getPreviousUserQuestions();
 
   return (
-    <div className="app-container">
+    <div style={{
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      position: 'relative',
+      height: '100vh',
+      backgroundColor: '#ffffff',
+      overflow: 'hidden'
+    }}>
       <button
         aria-label={isChatOpen ? "Đóng chat" : "Mở chat"}
         onClick={() => setIsChatOpen(!isChatOpen)}
-        className="toggle-button"
+        style={{
+          position: 'fixed',
+          bottom: '2vh',
+          right: '2vw',
+          width: 'clamp(50px, 10vw, 60px)',
+          height: 'clamp(50px, 10vw, 60px)',
+          borderRadius: '50%',
+          border: 'none',
+          background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
+          color: 'white',
+          fontSize: 'clamp(20px, 4vw, 24px)',
+          cursor: 'pointer',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
+          zIndex: 1000,
+          transition: 'all 0.3s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'scale(1.1)';
+          e.target.style.boxShadow = '0 12px 35px rgba(0,0,0,0.4)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'scale(1)';
+          e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+        }}
       >
         {isChatOpen ? '✕' : '💬'}
       </button>
 
       {isChatOpen && (
-        <div className="chat-container">
-          <div className="chat-header">
+        <div style={{
+          position: 'fixed',
+          bottom: 'calc(2vh + clamp(50px, 10vw, 60px) + 1vh)',
+          right: '2vw',
+          width: 'clamp(280px, 90vw, 400px)',
+          height: 'clamp(400px, 80vh, 600px)',
+          background: 'white',
+          borderRadius: '16px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          zIndex: 999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          animation: 'slideUp 0.3s ease-out'
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea, #764ba2)',
+            color: 'white',
+            padding: 'clamp(12px, 3vw, 20px)',
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
             <div>
-              <h3>Trợ lý Du lịch Khánh Hòa</h3>
-              <p>Hỗ trợ bạn mọi lúc</p>
+              <h3 style={{ 
+                margin: 0, 
+                fontSize: 'clamp(16px, 3vw, 18px)', 
+                fontWeight: 600 
+              }}>
+                Trợ lý Du lịch Khánh Hòa
+              </h3>
+              <p style={{ 
+                margin: '4px 0 0 0', 
+                fontSize: 'clamp(12px, 2.5vw, 14px)', 
+                opacity: 0.9 
+              }}>
+                Luôn sẵn sàng hỗ trợ bạn
+              </p>
             </div>
             {messages.length > 0 && (
               <button
                 aria-label="Làm mới cuộc trò chuyện"
-                onClick={() => {
-                  setMessages([]);
-                  setInput('');
-                  setIsTyping(false);
-                  setSessionId(generateSessionId());
+                onClick={resetChat}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  borderRadius: '8px',
+                  color: 'white',
+                  padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px)',
+                  fontSize: 'clamp(10px, 2vw, 12px)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
                 }}
-                className="reset-button"
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(255,255,255,0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(255,255,255,0.2)';
+                }}
               >
                 🔄 Làm mới
               </button>
             )}
           </div>
 
-          <div className="chat-body">
+          <div role="log" aria-live="polite" style={{
+            flex: 1,
+            padding: 'clamp(12px, 3vw, 16px)',
+            overflowY: 'auto',
+            backgroundColor: '#f8f9fa',
+            paddingBottom: messages.length === 0 ? '8px' : 'clamp(12px, 3vw, 16px)'
+          }}>
             {messages.length === 0 && (
-              <div className="welcome-message">
-                <p>👋 Xin chào! Tôi có thể giúp bạn tìm hiểu về:</p>
-                <div className="suggestions">
-                  {suggestions.map((item, idx) => (
+              <div style={{
+                textAlign: 'center',
+                color: '#6c757d',
+                marginTop: 'clamp(16px, 4vw, 20px)'
+              }}>
+                <p style={{ fontSize: 'clamp(14px, 3vw, 16px)' }}>
+                  👋 Xin chào! Tôi có thể giúp bạn tìm hiểu về:
+                </p>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'clamp(6px, 1.5vw, 8px)',
+                  marginTop: 'clamp(8px, 2vw, 12px)'
+                }}>
+                  {[
+                    { emoji: '🏛️', text: 'văn hóa' },
+                    { emoji: '🎉', text: 'sự kiện' },
+                    { emoji: '🏖️', text: 'địa điểm du lịch' },
+                    { emoji: '🍜', text: 'ẩm thực' },
+                    { emoji: '🏥', text: 'y tế' },
+                    { emoji: '🚌', text: 'tour du lịch' }
+                  ].map((item, idx) => (
                     <button
                       key={idx}
                       aria-label={`Tìm hiểu về ${item.text}`}
-                      onClick={() => sendMessage(`Tôi muốn tìm hiểu về ${item.text}`)}
-                      className="suggestion-button"
+                      onClick={() => handleSuggestionClick(`Tôi muốn tìm hiểu về ${item.text}`)}
+                      style={{
+                        fontSize: 'clamp(12px, 2.5vw, 14px)',
+                        padding: 'clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px)',
+                        backgroundColor: 'white',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        color: '#495057'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#f8f9fa';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'white';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}
                     >
                       {item.emoji} {item.text.charAt(0).toUpperCase() + item.text.slice(1)}
                     </button>
@@ -285,29 +409,99 @@ const App = () => {
             )}
 
             {messages.map((msg, index) => (
-              <div
-                key={msg.id || index}
-                className={`message ${msg.sender === 'user' ? 'user' : 'bot'}`}
-              >
+              <div key={msg.id || index} style={{
+                display: 'flex',
+                justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                marginBottom: 'clamp(8px, 2vw, 12px)'
+              }}>
                 {msg.sender === 'user' ? (
-                  <div className="message-content user">{msg.text}</div>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    color: 'white',
+                    padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px)',
+                    borderRadius: '18px 18px 4px 18px',
+                    maxWidth: '80%',
+                    fontSize: 'clamp(12px, 2.5vw, 14px)',
+                    lineHeight: 1.4
+                  }}>
+                    {msg.text}
+                  </div>
                 ) : msg.locations ? (
-                  <div className="message-content bot">
+                  <div style={{
+                    background: 'white',
+                    border: '1px solid #e9ecef',
+                    borderRadius: '18px 18px 18px 4px',
+                    maxWidth: '90%',
+                    padding: 'clamp(12px, 3vw, 16px)',
+                    fontSize: 'clamp(12px, 2.5vw, 14px)'
+                  }}>
                     {msg.isTyped ? (
                       <>
-                        <p className="locations-title">
+                        <p style={{ 
+                          margin: '0 0 clamp(8px, 2vw, 12px) 0', 
+                          fontWeight: 600, 
+                          color: '#495057' 
+                        }}>
                           Tìm thấy {msg.locations.length} địa điểm:
                         </p>
                         {msg.locations.map((location, locIndex) => (
-                          <div key={locIndex} className="location-card">
-                            <h4>{location.name}</h4>
-                            {location.address && <p>📍 {location.address}</p>}
-                            {location.phone && <p>📞 {location.phone}</p>}
-                            {location.openingHours && <p>🕒 {location.openingHours}</p>}
+                          <div key={locIndex} style={{
+                            background: '#f8f9fa',
+                            border: '1px solid #dee2e6',
+                            borderRadius: '12px',
+                            padding: 'clamp(8px, 2vw, 12px)',
+                            marginBottom: 'clamp(6px, 1.5vw, 8px)'
+                          }}>
+                            <h4 style={{ 
+                              margin: '0 0 clamp(6px, 1.5vw, 8px) 0', 
+                              color: '#343a40', 
+                              fontSize: 'clamp(14px, 3vw, 16px)' 
+                            }}>
+                              {location.name}
+                            </h4>
+                            {location.address && (
+                              <p style={{ 
+                                margin: 'clamp(2px, 0.5vw, 4px) 0', 
+                                fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                color: '#6c757d' 
+                              }}>
+                                📍 {location.address}
+                              </p>
+                            )}
+                            {location.phone && (
+                              <p style={{ 
+                                margin: 'clamp(2px, 0.5vw, 4px) 0', 
+                                fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                color: '#6c757d' 
+                              }}>
+                                📞 {location.phone}
+                              </p>
+                            )}
+                            {location.openingHours && (
+                              <p style={{ 
+                                margin: 'clamp(2px, 0.5vw, 4px) 0', 
+                                fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                color: '#6c757d' 
+                              }}>
+                                🕒 {location.openingHours}
+                              </p>
+                            )}
                             {location.highlights && location.highlights.length > 0 && (
-                              <div>
-                                <p className="highlights-title">✨ Điểm nổi bật:</p>
-                                <ul>
+                              <div style={{ margin: 'clamp(6px, 1.5vw, 8px) 0' }}>
+                                <p style={{ 
+                                  margin: '0 0 clamp(2px, 0.5vw, 4px) 0', 
+                                  fontWeight: 600, 
+                                  fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                  color: '#495057' 
+                                }}>
+                                  ✨ Điểm nổi bật:
+                                </p>
+                                <ul style={{ 
+                                  margin: 0, 
+                                  paddingLeft: 'clamp(12px, 3vw, 16px)', 
+                                  fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                                  color: '#6c757d' 
+                                }}>
                                   {location.highlights.map((highlight, hIndex) => (
                                     <li key={hIndex}>{highlight}</li>
                                   ))}
@@ -317,40 +511,70 @@ const App = () => {
                             <button
                               aria-label={`Chọn ${location.name}`}
                               onClick={() => handleLocationSelect(location.name)}
-                              className="location-button"
+                              style={{
+                                background: 'linear-gradient(135deg, #28a745, #20c997)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px)',
+                                fontSize: 'clamp(10px, 2vw, 12px)',
+                                cursor: 'pointer',
+                                marginTop: 'clamp(6px, 1.5vw, 8px)'
+                              }}
                             >
                               Chọn địa điểm này
                             </button>
                           </div>
                         ))}
-                        <p className="location-prompt">Bạn muốn chọn địa điểm nào?</p>
+                        <p style={{ 
+                          margin: 'clamp(6px, 1.5vw, 8px) 0 0 0', 
+                          fontSize: 'clamp(11px, 2.2vw, 13px)', 
+                          color: '#6c757d' 
+                        }}>
+                          Bạn muốn chọn địa điểm nào?
+                        </p>
                       </>
                     ) : (
-                      <p className="locations-title">
-                        <TypewriterText
-                          text={`Tìm thấy ${msg.locations.length} địa điểm:`}
-                          onComplete={() => {
-                            setTimeout(() => {
-                              setMessages(prev =>
-                                prev.map((m, i) =>
-                                  i === index ? { ...m, isTyped: true } : m
-                                )
-                              );
-                            }, 1000);
-                          }}
-                        />
-                      </p>
+                      <div>
+                        <p style={{ 
+                          margin: '0 0 clamp(8px, 2vw, 12px) 0', 
+                          fontWeight: 600, 
+                          color: '#495057' 
+                        }}>
+                          <TypewriterText
+                            text={`Tìm thấy ${msg.locations.length} địa điểm:`}
+                            onComplete={() => {
+                              setTimeout(() => {
+                                setMessages((prev) =>
+                                  prev.map((m, i) =>
+                                    i === index ? { ...m, isTyped: true } : m
+                                  )
+                                );
+                              }, 1000);
+                            }}
+                          />
+                        </p>
+                      </div>
                     )}
                   </div>
                 ) : (
-                  <div className="message-content bot">
+                  <div style={{
+                    background: 'white',
+                    border: '1px solid #e9ecef',
+                    borderRadius: '18px 18px 18px 4px',
+                    maxWidth: '80%',
+                    padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px)',
+                    fontSize: 'clamp(12px, 2.5vw, 14px)',
+                    lineHeight: 1.4,
+                    color: '#495057'
+                  }}>
                     {msg.isTyped ? (
                       msg.text
                     ) : (
                       <TypewriterText
                         text={msg.text}
                         onComplete={() => {
-                          setMessages(prev =>
+                          setMessages((prev) =>
                             prev.map((m, i) =>
                               i === index ? { ...m, isTyped: true } : m
                             )
@@ -364,12 +588,34 @@ const App = () => {
             ))}
 
             {isTyping && (
-              <div className="message bot">
-                <div className="message-content bot">
-                  <div className="typing-indicator">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                marginBottom: 'clamp(8px, 2vw, 12px)'
+              }}>
+                <div style={{
+                  background: 'white',
+                  border: '1px solid #e9ecef',
+                  borderRadius: '18px 18px 18px 4px',
+                  padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px)'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    gap: 'clamp(3px, 0.8vw, 4px)',
+                    alignItems: 'center'
+                  }}>
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        style={{
+                          width: 'clamp(6px, 1.5vw, 8px)',
+                          height: 'clamp(6px, 1.5vw, 8px)',
+                          borderRadius: '50%',
+                          background: '#6c757d',
+                          animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite`
+                        }}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
@@ -377,40 +623,168 @@ const App = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {getPreviousUserQuestions().length > 0 && (
-            <QuickActions
-              questions={getPreviousUserQuestions()}
-              onSelect={handleSuggestionClick}
-              onDelete={handleDeleteQuestion}
-            />
+          {previousQuestions.length > 0 && (
+            <div style={{
+              backgroundColor: '#f8f9fa',
+              borderTop: '1px solid #e9ecef'
+            }}>
+              <div style={{
+                padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px) clamp(2px, 0.5vw, 4px)',
+                fontSize: 'clamp(10px, 2vw, 11px)',
+                color: '#6c757d',
+                fontWeight: 500
+              }}>
+                💬 Câu hỏi trước:
+              </div>
+              <div style={{
+                padding: '0 clamp(8px, 2vw, 12px) clamp(6px, 1.5vw, 8px)',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 'clamp(3px, 0.8vw, 4px)',
+                maxHeight: 'clamp(50px, 15vw, 60px)',
+                overflowY: 'auto'
+              }}>
+                {previousQuestions.slice(0, 8).map((question, idx) => (
+                  <div key={idx} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 'clamp(3px, 0.8vw, 4px)' 
+                  }}>
+                    <button
+                      aria-label={`Gửi lại câu hỏi: ${question}`}
+                      tabIndex={0}
+                      onClick={() => handleSuggestionClick(question)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '10px',
+                        padding: 'clamp(3px, 0.8vw, 4px) clamp(6px, 1.5vw, 8px)',
+                        fontSize: 'clamp(10px, 2vw, 11px)',
+                        cursor: 'pointer',
+                        color: '#495057',
+                        transition: 'all 0.15s ease',
+                        whiteSpace: 'nowrap',
+                        maxWidth: 'clamp(80px, 25vw, 100px)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        lineHeight: '1.2',
+                        height: 'clamp(18px, 5vw, 22px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#e9ecef';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#fff';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                      title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
+                    >
+                      {question}
+                    </button>
+                    <button
+                      aria-label={`Xóa câu hỏi: ${question}`}
+                      tabIndex={0}
+                      onClick={() => handleDeleteQuestion(question)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleDeleteQuestion(question)}
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '50%',
+                        width: 'clamp(16px, 4vw, 20px)',
+                        height: 'clamp(16px, 4vw, 20px)',
+                        fontSize: 'clamp(8px, 2vw, 10px)',
+                        cursor: 'pointer',
+                        color: '#dc3545',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#dc3545';
+                        e.target.style.color = '#fff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#fff';
+                        e.target.style.color = '#dc3545';
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
-          <div className="chat-footer">
-            <div className="char-count">
-              {input.length}/500 {input.length > 450 && <span>(gần giới hạn)</span>}
+          <div style={{
+            padding: 'clamp(12px, 3vw, 16px)',
+            backgroundColor: '#ffffff',
+            borderTop: previousQuestions.length > 0 ? 'none' : '1px solid #e9ecef'
+          }}>
+            <div style={{
+              fontSize: 'clamp(10px, 2vw, 11px)',
+              color: input.length > 450 ? '#dc3545' : '#6c757d',
+              textAlign: 'right',
+              marginBottom: 'clamp(6px, 1.5vw, 8px)'
+            }}>
+              {input.length}/500
             </div>
-            <div className="input-group">
+            <div style={{ 
+              display: 'flex', 
+              gap: 'clamp(6px, 1.5vw, 8px)',
+              flexWrap: 'wrap' 
+            }}>
               <input
                 type="text"
                 value={input}
                 onChange={(e) => {
                   const value = e.target.value.replace(/[\n\t\r]/g, ' ');
-                  if (value.length <= 500) setInput(value);
-                }}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit(e);
+                  if (value.length <= 500) {
+                    setInput(value);
                   }
                 }}
+                onKeyPress={handleKeyPress}
                 placeholder="Nhập tin nhắn... (tối đa 500 ký tự)"
-                className="chat-input"
+                style={{
+                  flex: 1,
+                  border: `1px solid ${input.length > 450 ? '#ffc107' : '#dee2e6'}`,
+                  borderRadius: 'clamp(16px, 4vw, 20px)',
+                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
+                  fontSize: 'clamp(12px, 2.5vw, 14px)',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease',
+                  minWidth: '150px'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#667eea';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#dee2e6';
+                }}
               />
               <button
                 aria-label="Gửi tin nhắn"
                 onClick={handleSubmit}
                 disabled={isTyping || !input.trim()}
-                className="send-button"
+                style={{
+                  background: isTyping || !input.trim() ? '#6c757d' : 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 'clamp(16px, 4vw, 20px)',
+                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
+                  fontSize: 'clamp(12px, 2.5vw, 14px)',
+                  cursor: isTyping || !input.trim() ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap'
+                }}
               >
                 Gửi
               </button>
@@ -421,409 +795,56 @@ const App = () => {
 
       <style>
         {`
-          .app-container {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            height: 100vh;
-            background: #f5f5f5;
-            position: relative;
-            overflow: hidden;
-          }
-
-          .toggle-button {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            width: 3.5rem;
-            height: 3.5rem;
-            border-radius: 50%;
-            border: none;
-            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-            transition: transform 0.3s, box-shadow 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-          }
-          .toggle-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-          }
-
-          .chat-container {
-            position: fixed;
-            bottom: 5.5rem;
-            right: 1.5rem;
-            width: 100%;
-            max-width: 380px;
-            height: 550px;
-            background: white;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            animation: slide-up 0.3s ease-out;
-            z-index: 999;
-          }
-          @media (max-width: 480px) {
-            .chat-container {
-              max-width: 340px;
-              height: 480px;
-              bottom: 5rem;
-            }
-          }
-
-          .chat-header {
-            background: linear-gradient(135deg, #6b7280, #4b5563);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-top-left-radius: 1.5rem;
-            border-top-right-radius: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          }
-          .chat-header h3 {
-            margin: 0;
-            font-size: 1.125rem;
-            font-weight: 600;
-          }
-          .chat-header p {
-            margin: 0.25rem 0 0;
-            font-size: 0.75rem;
-            opacity: 0.9;
-          }
-          .reset-button {
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 0.5rem;
-            color: white;
-            padding: 0.25rem 0.75rem;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: background 0.2s;
-          }
-          .reset-button:hover {
-            background: rgba(255,255,255,0.25);
-          }
-
-          .chat-body {
-            flex: 1;
-            padding: 1rem;
-            overflow-y: auto;
-            background: #fafafa;
-          }
-          .chat-body::-webkit-scrollbar {
-            width: 5px;
-          }
-          .chat-body::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-          }
-          .chat-body::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 10px;
-          }
-          .chat-body::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-          }
-
-          .welcome-message {
-            text-align: center;
-            color: #4b5563;
-            margin-top: 1rem;
-          }
-          .welcome-message p {
-            font-size: 0.875rem;
-            margin: 0 0 0.75rem;
-          }
-          .suggestions {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-          }
-          .suggestion-button {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.75rem;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.875rem;
-            color: #374151;
-            cursor: pointer;
-            transition: all 0.2s;
-          }
-          .suggestion-button:hover {
-            background: #f3f4f6;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-          }
-
-          .message {
-            display: flex;
-            margin-bottom: 0.75rem;
-          }
-          .message.user {
-            justify-content: flex-end;
-          }
-          .message.bot {
-            justify-content: flex-start;
-          }
-          .message-content {
-            max-width: 80%;
-            padding: 0.75rem 1rem;
-            border-radius: 1rem;
-            font-size: 0.875rem;
-            line-height: 1.4;
-          }
-          .message-content.user {
-            background: linear-gradient(135deg, #7c3aed, #db2777);
-            color: white;
-            border-bottom-right-radius: 0.25rem;
-          }
-          .message-content.bot {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-bottom-left-radius: 0.25rem;
-            color: #374151;
-          }
-
-          .locations-title {
-            font-weight: 600;
-            color: #1f2937;
-            margin: 0 0 0.75rem;
-          }
-          .location-card {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.75rem;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-          }
-          .location-card h4 {
-            margin: 0 0 0.5rem;
-            font-size: 1rem;
-            color: #1f2937;
-          }
-          .location-card p {
-            margin: 0.125rem 0;
-            font-size: 0.75rem;
-            color: #6b7280;
-          }
-          .highlights-title {
-            font-weight: 600;
-            font-size: 0.75rem;
-            color: #374151;
-            margin: 0.5rem 0 0.25rem;
-          }
-          .location-card ul {
-            margin: 0;
-            padding-left: 1rem;
-            font-size: 0.75rem;
-            color: #6b7280;
-          }
-          .location-button {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            font-size: 0.75rem;
-            cursor: pointer;
-            margin-top: 0.5rem;
-            transition: background 0.2s;
-          }
-          .location-button:hover {
-            background: linear-gradient(135deg, #16a34a, #15803d);
-          }
-          .location-prompt {
-            font-size: 0.75rem;
-            color: #6b7280;
-            margin: 0.5rem 0 0;
-          }
-
-          .typing-indicator {
-            display: flex;
-            gap: 0.25rem;
-            align-items: center;
-          }
-          .typing-indicator span {
-            width: 0.5rem;
-            height: 0.5rem;
-            border-radius: 50%;
-            background: #6b7280;
-            animation: pulse 1.4s ease-in-out infinite;
-          }
-          .typing-indicator span:nth-child(2) {
-            animation-delay: 0.2s;
-          }
-          .typing-indicator span:nth-child(3) {
-            animation-delay: 0.4s;
-          }
-
-          .quick-actions {
-            background: #f3f4f6;
-            padding: 0.25rem 0.75rem;
-            border-top: 1px solid #e5e7eb;
-          }
-          .quick-actions-title {
-            font-size: 0.6875rem;
-            color: #6b7280;
-            font-weight: 500;
-            margin-bottom: 0.25rem;
-          }
-          .quick-actions-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem;
-            max-height: 2.5rem;
-            overflow-y: auto;
-          }
-          .quick-actions-list::-webkit-scrollbar {
-            width: 4px;
-          }
-          .quick-actions-list::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-          }
-          .quick-actions-list::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 10px;
-          }
-          .quick-actions-list::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-          }
-          .quick-action-item {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-          }
-          .quick-action-button {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
-            padding: 0.125rem 0.5rem;
-            font-size: 0.6875rem;
-            color: #374151;
-            cursor: pointer;
-            transition: all 0.15s;
-            max-width: 5rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            line-height: 1.2;
-            height: 1.25rem;
-            display: flex;
-            align-items: center;
-          }
-          .quick-action-button:hover {
-            background: #f3f4f6;
-            transform: translateY(-1px);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-          }
-          .quick-action-delete {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 50%;
-            width: 1.125rem;
-            height: 1.125rem;
-            font-size: 0.625rem;
-            color: #ef4444;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s;
-          }
-          .quick-action-delete:hover {
-            background: #ef4444;
-            color: white;
-          }
-
-          .chat-footer {
-            padding: 0.75rem;
-            background: white;
-            border-top: 1px solid #e5e7eb;
-          }
-          .char-count {
-            font-size: 0.6875rem;
-            color: #6b7280;
-            text-align: right;
-            margin-bottom: 0.25rem;
-          }
-          .char-count span {
-            color: #ef4444;
-          }
-          .input-group {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-          }
-          .chat-input {
-            flex: 1;
-            border: 1px solid #e5e7eb;
-            border-radius: 1.5rem;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            outline: none;
-            transition: border-color 0.2s;
-            min-width: 120px;
-          }
-          .chat-input:focus {
-            border-color: #7c3aed;
-          }
-          .chat-input[aria-invalid="true"] {
-            border-color: #facc15;
-          }
-          .send-button {
-            background: linear-gradient(135deg, #7c3aed, #db2777);
-            color: white;
-            border: none;
-            border-radius: 1.5rem;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: background 0.2s;
-            white-space: nowrap;
-          }
-          .send-button:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-          }
-          .send-button:not(:disabled):hover {
-            background: linear-gradient(135deg, #6d28d9, #c026d3);
-          }
-
-          @keyframes slide-up {
+          @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
           }
+          
           @keyframes pulse {
             0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
             40% { transform: scale(1); opacity: 1; }
           }
+          
+          div::-webkit-scrollbar {
+            width: clamp(4px, 1vw, 6px);
+          }
+          
+          div::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+          }
+          
+          div::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+          }
+          
+          div::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+          }
+
+          @media (max-width: 768px) {
+            button[aria-label="Đóng chat"], button[aria-label="Mở chat"] {
+              bottom: 1vh;
+              right: 1vw;
+            }
+            div[style*="position: fixed; bottom: calc(2vh + clamp(50px, 10vw, 60px) + 1vh)"] {
+              bottom: calc(1vh + clamp(50px, 10vw, 60px) + 0.5vh);
+              right: 1vw;
+              width: clamp(250px, 95vw, 360px);
+              height: clamp(350px, 85vh, 500px);
+            }
+          }
 
           @media (max-width: 480px) {
-            .toggle-button {
-              bottom: 1rem;
-              right: 1rem;
-              width: 3rem;
-              height: 3rem;
-              font-size: 1.25rem;
+            div[style*="flex: 1; padding: clamp(12px, 3vw, 16px)"] {
+              padding: clamp(8px, 2vw, 12px);
             }
-            .chat-header {
-              padding: 0.75rem 1rem;
+            div[style*="padding: clamp(12px, 3vw, 16px); background-color: #ffffff"] {
+              padding: clamp(8px, 2vw, 12px);
             }
-            .chat-body {
-              padding: 0.75rem;
-            }
-            .chat-footer {
-              padding: 0.5rem;
-            }
-            .chat-input {
-              min-width: 100px;
+            input[placeholder="Nhập tin nhắn... (tối đa 500 ký tự)"] {
+              min-width: 120px;
             }
           }
         `}
