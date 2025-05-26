@@ -110,7 +110,7 @@ const App = () => {
         const timer = setTimeout(() => {
           setDisplayText(prev => prev + text[currentIndex]);
           setCurrentIndex(prev => prev + 1);
-        }, delay), delay;
+        }, delay);
         return () => clearTimeout(timer);
       } else if (onComplete) {
         onComplete();
@@ -126,7 +126,7 @@ const App = () => {
       return;
     }
 
-    const cleanMessage = message.replace(/[\n\t\r]/g, '').trim();
+    const cleanMessage = message.replace(/[\n\t\r]/g, ' ').trim();
     const limitedMessage = cleanMessage.length > 500 ? cleanMessage.substring(0, 500) + '...' : cleanMessage;
 
     setAllUserQuestions(prev => [...prev, limitedMessage]);
@@ -175,7 +175,7 @@ const App = () => {
         if (attempt === retries) {
           setMessages((prev) => [
             ...prev,
-            { text: `Lỗi: ${error.message}. Vui lòng thử lại!`, sender: 'bot', isTyped: true, id: Date.now() + 1 },
+            { text: `Lỗi: ${error.message}. Vui lòng thử lại!`, sender: 'bot', isTyped: true, id: Date.now() + 2 },
           ]);
         }
       }
@@ -248,7 +248,7 @@ const App = () => {
           border: 'none',
           background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
           color: 'white',
-          fontSize: 'clamp(22px, 4.5vw, 16px)',
+          fontSize: 'clamp(22px, 4.5vw, 26px)',
           cursor: 'pointer',
           boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
           zIndex: 1000,
