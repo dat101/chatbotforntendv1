@@ -110,7 +110,7 @@ const App = () => {
         const timer = setTimeout(() => {
           setDisplayText(prev => prev + text[currentIndex]);
           setCurrentIndex(prev => prev + 1);
-        }, delay);
+        }, delay), delay;
         return () => clearTimeout(timer);
       } else if (onComplete) {
         onComplete();
@@ -126,7 +126,7 @@ const App = () => {
       return;
     }
 
-    const cleanMessage = message.replace(/[\n\t\r]/g, ' ').trim();
+    const cleanMessage = message.replace(/[\n\t\r]/g, '').trim();
     const limitedMessage = cleanMessage.length > 500 ? cleanMessage.substring(0, 500) + '...' : cleanMessage;
 
     setAllUserQuestions(prev => [...prev, limitedMessage]);
@@ -175,7 +175,7 @@ const App = () => {
         if (attempt === retries) {
           setMessages((prev) => [
             ...prev,
-            { text: `Lỗi: ${error.message}. Vui lòng thử lại!`, sender: 'bot', isTyped: true, id: Date.now() + 2 },
+            { text: `Lỗi: ${error.message}. Vui lòng thử lại!`, sender: 'bot', isTyped: true, id: Date.now() + 1 },
           ]);
         }
       }
@@ -248,7 +248,7 @@ const App = () => {
           border: 'none',
           background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
           color: 'white',
-          fontSize: 'clamp(22px, 4.5vw, 26px)',
+          fontSize: 'clamp(22px, 4.5vw, 16px)',
           cursor: 'pointer',
           boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
           zIndex: 1000,
@@ -602,6 +602,40 @@ const App = () => {
               </div>
             )}
             <div ref={messagesEndRef} />
+
+            {messages.length > 0 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: 'clamp(6px, 1.5vw, 8px)'
+              }}>
+                <button
+                  aria-label="Làm mới cuộc trò chuyện"
+                  onClick={resetChat}
+                  style={{
+                    background: 'rgba(255,255,255,0.9)',
+                    border: '1px solid #dee2e6',
+                    borderRadius: '12px',
+                    color: '#495057',
+                    padding: 'clamp(5px, 1.2vw, 7px) clamp(10px, 2.5vw, 12px)',
+                    fontSize: 'clamp(11px, 2.3vw, 13px)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#e9ecef';
+                    e.target.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'rgba(255,255,255,0.9)';
+                    e.target.style.transform = 'translateY(0)';
+                  }}
+                >
+                  🔄 Làm mới
+                </button>
+              </div>
+            )}
           </div>
 
           {previousQuestions.length > 0 && (
@@ -710,39 +744,6 @@ const App = () => {
             backgroundColor: '#ffffff',
             borderTop: previousQuestions.length === 0 ? 'none' : '1px solid #e9ecef'
           }}>
-            {messages.length > 0 && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: 'clamp(6px, 1.5vw, 8px)'
-              }}>
-                <button
-                  aria-label="Làm mới cuộc trò chuyện"
-                  onClick={resetChat}
-                  style={{
-                    background: 'rgba(255,255,255,0.9)',
-                    border: '1px solid #dee2e6',
-                    borderRadius: '12px',
-                    color: '#495057',
-                    padding: 'clamp(5px, 1.2vw, 7px) clamp(10px, 2.5vw, 12px)',
-                    fontSize: 'clamp(11px, 2.3vw, 13px)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.background = '#e9ecef';
-                    e.target.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'rgba(255,255,255,0.9)';
-                    e.target.style.transform = 'translateY(0)';
-                  }}
-                >
-                  🔄 Làm mới
-                </button>
-              </div>
-            )}
             <div style={{
               fontSize: 'clamp(11px, 2.3vw, 13px)',
               color: input.length > 450 ? '#dc3545' : '#6c757d',
