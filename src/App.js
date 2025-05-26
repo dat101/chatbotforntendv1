@@ -331,7 +331,8 @@ const App = () => {
             padding: 'clamp(8px, 2vw, 12px)',
             overflowY: 'auto',
             backgroundColor: '#f8f9fa',
-            paddingBottom: messages.length === 0 ? '6px' : 'clamp(8px, 2vw, 12px)'
+            paddingBottom: messages.length === 0 ? '6px' : 'clamp(8px, 2vw, 12px)',
+            position: 'relative'
           }}>
             {messages.length === 0 && (
               <div style={{
@@ -606,29 +607,34 @@ const App = () => {
               <div style={{
                 display: 'flex',
                 justifyContent: 'center',
-                marginBottom: 'clamp(6px, 1.5vw, 8px)'
+                marginBottom: 'clamp(6px, 1.5vw, 8px)',
+                position: 'sticky',
+                bottom: '0',
+                backgroundColor: '#f8f9fa',
+                zIndex: 10,
+                padding: 'clamp(4px, 1vw, 6px) 0'
               }}>
                 <button
                   aria-label="Làm mới cuộc trò chuyện"
                   onClick={resetChat}
                   style={{
-                    background: 'rgba(255,255,255,0.9)',
-                    border: '1px solid #dee2e6',
+                    background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                    border: 'none',
                     borderRadius: '12px',
-                    color: '#495057',
-                    padding: 'clamp(5px, 1.2vw, 7px) clamp(10px, 2.5vw, 12px)',
+                    color: 'white',
+                    padding: 'clamp(8px, 1.5vw, 10px) clamp(12px, 2.5vw, 14px)',
                     fontSize: 'clamp(11px, 2.3vw, 13px)',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.background = '#e9ecef';
                     e.target.style.transform = 'translateY(-1px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.background = 'rgba(255,255,255,0.9)';
                     e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
                   }}
                 >
                   🔄 Làm mới
@@ -637,13 +643,13 @@ const App = () => {
             )}
           </div>
 
-          {previousQuestions.length > 0 && (
+          {previousQuestions?.length > 0 && (
             <div style={{
               backgroundColor: '#f8f9fa',
               borderTop: '1px solid #e9ecef'
             }}>
               <div style={{
-                padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px) clamp(2px, 0.5vw, 4px)',
+                padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px) clamp(2px, 0.5vw, 4px)', 
                 fontSize: 'clamp(11px, 2.3vw, 13px)',
                 color: '#6c757d',
                 fontWeight: 500
@@ -658,7 +664,7 @@ const App = () => {
                 maxHeight: 'clamp(35px, 10vw, 45px)',
                 overflowY: 'auto'
               }}>
-                {previousQuestions.slice(0, 8).map((question, idx) => (
+                {previousQuestions?.slice(0, 8).map((question, idx) => (
                   <div key={idx} style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
@@ -671,7 +677,7 @@ const App = () => {
                       onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
                       style={{
                         background: '#fff',
-                        border: '1px solid #dee2e6',
+                        border: '#1e2e6f6',
                         borderRadius: '10px',
                         padding: 'clamp(3px, 0.8vw, 5px) clamp(6px, 1.5vw, 8px)',
                         fontSize: 'clamp(11px, 2.3vw, 13px)',
@@ -689,12 +695,13 @@ const App = () => {
                         flexShrink: 0
                       }}
                       onMouseEnter={(e) => {
-                        e.target.style.background = '#e9ecef';
+                        e.target.style.backgroundColor = '#e9ecef';
                         e.target.style.transform = 'translateY(-1px)';
-                        e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
+                        e.target.style.boxShadow = '0 1px 4px';
+rgba(0,0,0,0.1)';
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.background = '#fff';
+                        e.target.style.backgroundColor = '#fff';
                         e.target.style.transform = 'translateY(0)';
                         e.target.style.boxShadow = 'none';
                       }}
@@ -703,7 +710,7 @@ const App = () => {
                       {question}
                     </button>
                     <button
-                      aria-label={`Xóa câu hỏi: ${question}`}
+                      aria-label="Xóa câu hỏi: ${question}"
                       tabIndex={0}
                       onClick={() => handleDeleteQuestion(question)}
                       onKeyDown={(e) => e.key === 'Enter' && handleDeleteQuestion(question)}
@@ -770,7 +777,7 @@ const App = () => {
                 style={{
                   flex: 1,
                   border: `1px solid ${input.length > 450 ? '#ffc107' : '#dee2e6'}`,
-                  borderRadius: 'clamp(12px, 3vw, 16px)',
+                  borderRadius: 'clamp(12px, 3vw, 14px)',
                   padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 14px)',
                   fontSize: 'clamp(12px, 2.5vw, 14px)',
                   outline: 'none',
@@ -826,12 +833,12 @@ const App = () => {
           
           div::-webkit-scrollbar-track {
             background: #f1f1f1;
-            borderRadius: 8px;
+            border-radius: 8px;
           }
           
           div::-webkit-scrollbar-thumb {
             background: #c1c1c1;
-            borderRadius: 8px;
+            border-radius: 8px;
           }
           
           div::-webkit-scrollbar-thumb:hover {
@@ -841,7 +848,7 @@ const App = () => {
           .chat-box {
             height: clamp(400px, 75vh, 520px);
           }
-          .chat-box.no-quick-actions {
+          .no-quick-actions {
             height: clamp(370px, 70vh, 480px);
           }
 
@@ -849,7 +856,7 @@ const App = () => {
             .chat-box {
               height: clamp(360px, 80vh, 500px);
             }
-            .chat-box.no-quick-actions {
+            .no-quick-actions {
               height: clamp(340px, 75vh, 480px);
             }
           }
@@ -860,32 +867,32 @@ const App = () => {
               right: 1vw;
               width: clamp(48px, 12vw, 56px);
               height: clamp(48px, 12vw, 56px);
-              fontSize: clamp(20px, 5vw, 24px);
+              font-size: clamp(20px, 5vw, 24px);
             }
             .chat-box {
               bottom: calc(1vh + clamp(48px, 12vw, 56px) + 0.5vh);
               right: 1vw;
               width: clamp(280px, 95vw, 380px);
-              height: clamp(340px, 85vh, 460px);
+              height: clamp(330px, 85vh, 460px);
             }
-            .chat-box.no-quick-actions {
+            .no-quick-actions {
               height: clamp(320px, 80vh, 440px);
             }
             div[style*="padding: clamp(8px, 2vw, 12px); background-color: #ffffff"] {
               padding: clamp(6px, 1.5vw, 10px);
             }
-            div[style*="marginTop: 'clamp(8px, 2vw, 12px)'"] {
+            div[style*="margin-top: clamp(8px, 2vw, 12px)"] {
               margin-top: clamp(6px, 1.5vw, 10px);
             }
-            p[style*="fontSize: 'clamp(14px, 2.8vw, 16px)'"] {
+            p[style*="font-size: clamp(14px, 2.8vw, 16px)"] {
               font-size: clamp(13px, 3vw, 15px);
             }
-            button[style*="fontSize: 'clamp(12px, 2.5vw, 14px)'"] {
+            button[style*="font-size: clamp(12px, 2.5vw, 14px)"] {
               font-size: clamp(11px, 2.8vw, 13px);
               padding: clamp(5px, 1.2vw, 7px) clamp(6px, 1.5vw, 8px);
               min-height: clamp(28px, 6vw, 32px);
             }
-            input[style*="fontSize: 'clamp(12px, 2.5vw, 14px)'"] {
+            input[style*="font-size: clamp(12px, 2.5vw, 14px)"] {
               font-size: clamp(11px, 2.8vw, 13px);
               padding: clamp(5px, 1.2vw, 7px) clamp(8px, 2vw, 12px);
               min-width: 140px;
@@ -903,7 +910,7 @@ const App = () => {
               right: 0.5vw;
               width: clamp(44px, 14vw, 52px);
               height: clamp(44px, 14vw, 52px);
-              fontSize: clamp(18px, 5.5vw, 22px);
+              font-size: clamp(18px, 5.5vw, 22px);
             }
             .chat-box {
               bottom: calc(0.5vh + clamp(44px, 14vw, 52px) + 0.3vh);
@@ -911,8 +918,8 @@ const App = () => {
               width: clamp(260px, 96vw, 340px);
               height: clamp(330px, 90vh, 420px);
             }
-            .chat-box.no-quick-actions {
-              height: clamp(310px, 85vh, 400px);
+            .no-quick-actions {
+              height: clamp(280px, 85vh, 400px);
             }
             div[style*="flex: 1; padding: clamp(8px, 2vw, 12px)"] {
               padding: clamp(6px, 1.5vw, 10px);
@@ -920,18 +927,18 @@ const App = () => {
             div[style*="padding: clamp(8px, 2vw, 12px); background-color: #ffffff"] {
               padding: clamp(6px, 1.5vw, 10px);
             }
-            div[style*="marginTop: 'clamp(8px, 2vw, 12px)'"] {
+            div[style*="margin-top: clamp(8px, 2vw, 12px)"] {
               margin-top: clamp(6px, 1.5vw, 10px);
             }
-            p[style*="fontSize: 'clamp(14px, 2.8vw, 16px)'"] {
+            p[style*="font-size: clamp(14px, 2.8vw, 16px)"] {
               font-size: clamp(12px, 3.5vw, 14px);
             }
-            button[style*="fontSize: 'clamp(12px, 2.5vw, 14px)'"] {
+            button[style*="font-size: clamp(12px, 2.5vw, 14px)"] {
               font-size: clamp(11px, 3vw, 13px);
               padding: clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 8px);
               min-height: clamp(26px, 5.5vw, 30px);
             }
-            input[style*="fontSize: 'clamp(12px, 2.5vw, 14px)'"] {
+            input[style*="font-size: clamp(12px, 2.5vw, 14px)"] {
               font-size: clamp(11px, 3vw, 13px);
               padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
               min-width: 120px;
@@ -941,14 +948,14 @@ const App = () => {
               padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
               min-width: clamp(52px, 14vw, 68px);
             }
-            div[style*="height: 'clamp(18px, 4.5vw, 22px)'"] {
+            div[style*="height: clamp(18px, 4.5vw, 22px)"] {
               height: clamp(16px, 4vw, 20px);
             }
-            button[style*="fontSize: 'clamp(11px, 2.3vw, 13px)'"] {
+            button[style*="font-size: clamp(11px, 2.3vw, 13px)"] {
               font-size: clamp(10px, 2.8vw, 12px);
               padding: clamp(3px, 0.8vw, 5px) clamp(5px, 1.2vw, 7px);
             }
-            button[style*="width: 'clamp(16px, 3.5vw, 20px)'"] {
+            button[style*="width: clamp(16px, 3.5vw, 20px)"] {
               width: clamp(14px, 3vw, 18px);
               height: clamp(14px, 3vw, 18px);
               font-size: clamp(8px, 1.8vw, 10px);
