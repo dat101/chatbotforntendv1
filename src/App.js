@@ -331,7 +331,9 @@ const App = () => {
             padding: 'clamp(8px, 2vw, 12px)',
             overflowY: 'auto',
             backgroundColor: '#f8f9fa',
-            paddingBottom: messages.length === 0 ? '6px' : 'clamp(8px, 2vw, 12px)'
+            paddingBottom: messages.length === 0 ? '6px' : 'clamp(8px, 2vw, 12px)',
+            display: 'flex',
+            flexDirection: 'column'
           }}>
             {messages.length === 0 && (
               <div style={{
@@ -603,141 +605,148 @@ const App = () => {
             )}
             <div ref={messagesEndRef} />
 
-            {messages.length > 0 && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: 'clamp(6px, 1.5vw, 8px)'
-              }}>
-                <button
-                  aria-label="Làm mới cuộc trò chuyện"
-                  onClick={resetChat}
-                  style={{
-                    background: 'rgba(255,255,255,0.9)',
-                    border: '1px solid #dee2e6',
-                    borderRadius: '12px',
-                    color: '#495057',
-                    padding: 'clamp(5px, 1.2vw, 7px) clamp(10px, 2.5vw, 12px)',
-                    fontSize: 'clamp(11px, 2.3vw, 13px)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.background = '#e9ecef';
-                    e.target.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'rgba(255,255,255,0.9)';
-                    e.target.style.transform = 'translateY(0)';
-                  }}
-                >
-                  🔄 Làm mới
-                </button>
-              </div>
-            )}
-          </div>
+            <div style={{ marginTop: 'auto' }}>
+              {messages.length > 0 && (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  marginBottom: 'clamp(6px, 1.5vw, 8px)',
+                  position: 'sticky',
+                  bottom: '0',
+                  backgroundColor: '#f8f9fa',
+                  zIndex: 10,
+                  padding: 'clamp(4px, 1vw, 6px) 0'
+                }}>
+                  <button
+                    aria-label="Làm mới cuộc trò chuyện"
+                    onClick={resetChat}
+                    style={{
+                      background: 'rgba(255,255,255,0.9)',
+                      border: '1px solid #dee2e6',
+                      borderRadius: '12px',
+                      color: '#495057',
+                      padding: 'clamp(5px, 1.2vw, 7px) clamp(10px, 2.5vw, 12px)',
+                      fontSize: 'clamp(11px, 2.3vw, 13px)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = '#e9ecef';
+                      e.target.style.transform = 'translateY(-1px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'rgba(255,255,255,0.9)';
+                      e.target.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    🔄 Làm mới
+                  </button>
+                </div>
+              )}
 
-          {previousQuestions.length > 0 && (
-            <div style={{
-              backgroundColor: '#f8f9fa',
-              borderTop: '1px solid #e9ecef'
-            }}>
-              <div style={{
-                padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px) clamp(2px, 0.5vw, 4px)',
-                fontSize: 'clamp(11px, 2.3vw, 13px)',
-                color: '#6c757d',
-                fontWeight: 500
-              }}>
-                💬 Câu hỏi trước:
-              </div>
-              <div style={{
-                padding: '0 clamp(6px, 1.5vw, 8px) clamp(4px, 1vw, 6px)',
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 'clamp(3px, 0.8vw, 5px)',
-                maxHeight: 'clamp(35px, 10vw, 45px)',
-                overflowY: 'auto'
-              }}>
-                {previousQuestions.slice(0, 8).map((question, idx) => (
-                  <div key={idx} style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 'clamp(3px, 0.8vw, 5px)' 
+              {previousQuestions.length > 0 && (
+                <div style={{
+                  backgroundColor: '#f8f9fa',
+                  borderTop: '1px solid #e9ecef'
+                }}>
+                  <div style={{
+                    padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px) clamp(2px, 0.5vw, 4px)',
+                    fontSize: 'clamp(11px, 2.3vw, 13px)',
+                    color: '#6c757d',
+                    fontWeight: 500
                   }}>
-                    <button
-                      aria-label={`Gửi lại câu hỏi: ${question}`}
-                      tabIndex={0}
-                      onClick={() => handleSuggestionClick(question)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
-                      style={{
-                        background: '#fff',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '10px',
-                        padding: 'clamp(3px, 0.8vw, 5px) clamp(6px, 1.5vw, 8px)',
-                        fontSize: 'clamp(11px, 2.3vw, 13px)',
-                        cursor: 'pointer',
-                        color: '#495057',
-                        transition: 'all 0.15s ease',
-                        whiteSpace: 'nowrap',
-                        maxWidth: 'clamp(80px, 24vw, 100px)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        lineHeight: '1.4',
-                        height: 'clamp(18px, 4.5vw, 22px)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        flexShrink: 0
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = '#e9ecef';
-                        e.target.style.transform = 'translateY(-1px)';
-                        e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = '#fff';
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                      title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
-                    >
-                      {question}
-                    </button>
-                    <button
-                      aria-label={`Xóa câu hỏi: ${question}`}
-                      tabIndex={0}
-                      onClick={() => handleDeleteQuestion(question)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleDeleteQuestion(question)}
-                      style={{
-                        background: '#fff',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '50%',
-                        width: 'clamp(16px, 3.5vw, 20px)',
-                        height: 'clamp(16px, 3.5vw, 20px)',
-                        fontSize: 'clamp(9px, 2vw, 11px)',
-                        cursor: 'pointer',
-                        color: '#dc3545',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.15s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = '#dc3545';
-                        e.target.style.color = '#fff';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = '#fff';
-                        e.target.style.color = '#dc3545';
-                      }}
-                    >
-                      🗑️
-                    </button>
+                    💬 Câu hỏi trước:
                   </div>
-                ))}
-              </div>
+                  <div style={{
+                    padding: '0 clamp(6px, 1.5vw, 8px) clamp(4px, 1vw, 6px)',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 'clamp(3px, 0.8vw, 5px)',
+                    maxHeight: 'clamp(35px, 10vw, 45px)',
+                    overflowY: 'auto'
+                  }}>
+                    {previousQuestions.slice(0, 8).map((question, idx) => (
+                      <div key={idx} style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 'clamp(3px, 0.8vw, 5px)' 
+                      }}>
+                        <button
+                          aria-label={`Gửi lại câu hỏi: ${question}`}
+                          tabIndex={0}
+                          onClick={() => handleSuggestionClick(question)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
+                          style={{
+                            background: '#fff',
+                            border: '1px solid #dee2e6',
+                            borderRadius: '10px',
+                            padding: 'clamp(3px, 0.8vw, 5px) clamp(6px, 1.5vw, 8px)',
+                            fontSize: 'clamp(11px, 2.3vw, 13px)',
+                            cursor: 'pointer',
+                            color: '#495057',
+                            transition: 'all 0.15s ease',
+                            whiteSpace: 'nowrap',
+                            maxWidth: 'clamp(80px, 24vw, 100px)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            lineHeight: '1.4',
+                            height: 'clamp(18px, 4.5vw, 22px)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            flexShrink: 0
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.background = '#e9ecef';
+                            e.target.style.transform = 'translateY(-1px)';
+                            e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.background = '#fff';
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                          title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
+                        >
+                          {question}
+                        </button>
+                        <button
+                          aria-label={`Xóa câu hỏi: ${question}`}
+                          tabIndex={0}
+                          onClick={() => handleDeleteQuestion(question)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleDeleteQuestion(question)}
+                          style={{
+                            background: '#fff',
+                            border: '1px solid #dee2e6',
+                            borderRadius: '50%',
+                            width: 'clamp(16px, 3.5vw, 20px)',
+                            height: 'clamp(16px, 3.5vw, 20px)',
+                            fontSize: 'clamp(9px, 2vw, 11px)',
+                            cursor: 'pointer',
+                            color: '#dc3545',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.background = '#dc3545';
+                            e.target.style.color = '#fff';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.background = '#fff';
+                            e.target.style.color = '#dc3545';
+                          }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           <div style={{
             padding: 'clamp(8px, 2vw, 12px)',
