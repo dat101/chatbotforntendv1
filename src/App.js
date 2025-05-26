@@ -18,7 +18,10 @@ const App = () => {
   const [typingStates, setTypingStates] = useState({});
   const [allUserQuestions, setAllUserQuestions] = useState([]);
 
-  const backendUrl = 'https://chatbot-backend-1-ja1c.onrender.com/api/chat';
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000/api/chat';
+  if (!process.env.REACT_APP_BACKEND_URL) {
+    console.warn('Warning: REACT_APP_BACKEND_URL is not defined. Using fallback: http://localhost:3000/api/chat');
+  }
 
   const generateSessionId = () => {
     return 'sess_' + Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -42,7 +45,6 @@ const App = () => {
   }, [messages]);
 
   const getPreviousUserQuestions = () => {
-    console.log('allUserQuestions:', allUserQuestions);
     const recentQuestions = allUserQuestions.slice(-6).reverse();
     const truncatedMessages = recentQuestions
       .map((text, index) => ({
@@ -54,7 +56,6 @@ const App = () => {
         self.findIndex(t => t.original === item.original) === index
       )
       .map(item => item.truncated);
-    console.log('truncatedMessages:', truncatedMessages);
     return truncatedMessages;
   };
 
@@ -121,23 +122,15 @@ const App = () => {
 
   const sendMessage = debounce(async (message, retries = 3) => {
     if (!message.trim() || isTyping || !sessionId) {
-      if (!sessionId) {
-        setSessionId(generateSessionId());
-      }
+      if (!sessionId) setSessionId(generateSessionId());
       return;
     }
 
     const cleanMessage = message.replace(/[\n\t\r]/g, ' ').trim();
     const limitedMessage = cleanMessage.length > 500 ? cleanMessage.substring(0, 500) + '...' : cleanMessage;
 
-    setAllUserQuestions(prev => {
-      const updated = [...prev, limitedMessage];
-      return updated.slice(-20);
-    });
-
-    const newMessage = { text: limitedMessage, sender: 'user', id: Date.now() };
-    setMessages((prev) => [...prev, newMessage]);
-
+    setAllUserQuestions(prev => [...prev, limitedMessage]);
+    setMessages((prev) => [...prev, { text: limitedMessage, sender: 'user', id: Date.now() }]);
     setInput('');
     setIsTyping(true);
 
@@ -191,12 +184,10 @@ const App = () => {
   }, 1000);
 
   const handleSuggestionClick = (suggestion) => {
-    console.log('Suggestion clicked:', suggestion);
     const originalMessage = allUserQuestions.find(msg => {
       const truncated = msg.length > 20 ? msg.substring(0, 17) + '...' : msg;
       return truncated === suggestion;
     }) || suggestion;
-    console.log('Original message:', originalMessage);
     sendMessage(originalMessage);
   };
 
@@ -319,30 +310,20 @@ const App = () => {
                 Luôn sẵn sàng hỗ trợ bạn
               </p>
             </div>
-            {messages.length > 0 && (
-              <button
-                aria-label="Làm mới cuộc trò chuyện"
-                onClick={resetChat}
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  borderRadius: '8px',
-                  color: 'white',
-                  padding: 'clamp(5px, 1.2vw, 7px) clamp(8px, 2vw, 12px)',
-                  fontSize: 'clamp(12px, 2.3vw, 14px)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = 'rgba(255,255,255,0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'rgba(255,255,255,0.2)';
-                }}
-              >
-                🔄 Làm mới
-              </button>
-            )}
+            <div style={{
+              width: 'clamp(32px, 6vw, 36px)',
+              height: 'clamp(32px, 6vw, 36px)'
+            }}>
+              <img 
+                src="https://travelwithfnb.vn/wp-content/uploads/2025/04/z6437356296263_1d47f2fae248475a8350d2daf5bc858d-removebg-preview.png" 
+                alt="Logo Trợ lý Du lịch Khánh Hòa" 
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'contain' 
+                }} 
+              />
+            </div>
           </div>
 
           <div role="log" aria-live="polite" style={{
@@ -587,6 +568,40 @@ const App = () => {
               </div>
             ))}
 
+            {messages.length > 0 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: 'clamp(6px, 1.5vw, 8px)'
+              }}>
+                <button
+                  aria-label="Làm mới cuộc trò chuyện"
+                  onClick={resetChat}
+                  style={{
+                    background: 'rgba(255,255,255,0.9)',
+                    border: '1px solid #dee2e6',
+                    borderRadius: '12px',
+                    color: '#495057',
+                    padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px)',
+                    fontSize: 'clamp(12px, 2.5vw, 14px)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#e9ecef';
+                    e.target.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'rgba(255,255,255,0.9)';
+                    e.target.style.transform = 'translateY(0)';
+                  }}
+                >
+                  🔄 Làm mới cuộc trò chuyện
+                </button>
+              </div>
+            )}
+
             {isTyping && (
               <div style={{
                 display: 'flex',
@@ -727,7 +742,7 @@ const App = () => {
           <div style={{
             padding: 'clamp(8px, 2vw, 12px)',
             backgroundColor: '#ffffff',
-            borderTop: previousQuestions.length > 0 ? 'none' : '1px solid #e9ecef'
+            borderTop: previousQuestions.length === 0 ? 'none' : '1px solid #e9ecef'
           }}>
             <div style={{
               fontSize: 'clamp(11px, 2.3vw, 13px)',
@@ -812,19 +827,18 @@ const App = () => {
           
           div::-webkit-scrollbar-track {
             background: #f1f1f1;
-            border-radius: 8px;
+            borderRadius: 8px;
           }
           
           div::-webkit-scrollbar-thumb {
             background: #c1c1c1;
-            border-radius: 8px;
+            borderRadius: 8px;
           }
           
           div::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
           }
 
-          /* Màn hình lớn (>1024px) */
           .chat-box {
             height: clamp(400px, 75vh, 520px);
           }
@@ -832,7 +846,6 @@ const App = () => {
             height: clamp(370px, 70vh, 480px);
           }
 
-          /* Tablet (768px-1024px) */
           @media (max-width: 1024px) {
             .chat-box {
               height: clamp(360px, 80vh, 500px);
@@ -842,7 +855,6 @@ const App = () => {
             }
           }
 
-          /* Màn hình nhỏ (480px-767px) */
           @media (max-width: 767px) {
             button[aria-label="Đóng chat"], button[aria-label="Mở chat"] {
               bottom: 1vh;
@@ -886,7 +898,6 @@ const App = () => {
             }
           }
 
-          /* Màn hình rất nhỏ (<480px) */
           @media (max-width: 479px) {
             button[aria-label="Đóng chat"], button[aria-label="Mở chat"] {
               bottom: 0.5vh;
