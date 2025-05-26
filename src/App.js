@@ -142,7 +142,7 @@ const App = () => {
           body: JSON.stringify({
             message: limitedMessage,
             userId: 'user1',
-            sessionId: sessionId
+            sessionId
           })
         });
 
@@ -610,12 +610,12 @@ const App = () => {
               borderTop: '1px solid #e9ecef'
             }}>
               <div style={{
-                padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px) clamp(0, 0.5vw, 4px)',
+                padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px) clamp(2px, 0.5vw, 4px)',
                 fontSize: 'clamp(11px, 2.3vw, 13px)',
                 color: '#6c757d',
                 fontWeight: 500
               }}>
-                💖 Câu hỏi trước:
+                💬 Câu hỏi trước:
               </div>
               <div style={{
                 padding: '0 clamp(6px, 1.5vw, 8px) clamp(4px, 1vw, 6px)',
@@ -629,188 +629,187 @@ const App = () => {
                   <div key={idx} style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: 'clamp(3px, 0.8vw, 5px)'
-                    }}>
-                      <button 
-                        aria-label="send message" 
-                        onClick={() => handleSuggestionClick(question)}
-                        aria-label={`Gửi lại câu hỏi: ${question}`}
-                        tabIndex={0}
-                        onClick={() => handleSuggestionClick(question)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
-                        style={{
-                          background: '#fff',
-                          border: '1px solid #dee2e6',
-                          borderRadius: '10px',
-                          padding: 'clamp(3px, 0.8vw, 5px) clamp(6px, 1.5vw, 8px)',
-                          fontSize: 'clamp(11px, 2.3vw, 13px)',
-                          cursor: 'pointer',
-                          color: '#495057',
-                          transition: 'all 0.15s ease',
-                          whiteSpace: 'nowrap',
-                          maxWidth: 'clamp(80px, 24vw, 100px)',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          lineHeight: '1.4',
-                          height: 'clamp(18px, 4.5vw, 22px)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          flexShrink: 0
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.background = '#e9ecef';
-                          e.target.style.transform = 'translateY(-1px)';
-                          e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.background = '#fff';
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = 'none';
-                        }}
-                        title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
-                      >
-                        {question}
-                      </button>
-                      <button
-                        aria-label={`Xóa câu hỏi: ${question}`}
-                        tabIndex={0}
-                        onClick={() => handleDeleteQuestion(question)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleDeleteQuestion(question)}
-                        style={{
-                          background: '#fff',
-                          border: '1px solid #dee2e6',
-                          borderRadius: '50%',
-                          width: 'clamp(16px, 3.5vw, 20px)',
-                          height: 'clamp(16px, 3.5vw, 20px)',
-                          fontSize: 'clamp(9px, 2vw, 11px)',
-                          cursor: 'pointer',
-                          color: '#dc3545',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.15s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.background = '#dc3545';
-                          e.target.style.color = '#fff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.background = '#fff';
-                          e.target.style.color = '#dc3545';
-                        }}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div style={{
-              padding: 'clamp(8px, 2vw, 12px)',
-              backgroundColor: '#ffffff',
-              borderTop: previousQuestions.length === 0 ? 'none' : '1px solid #e9ecef'
-            }}>
-              {messages.length > 0 && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  marginBottom: 'clamp(6px, 1.5vw, 8px)'
-                }}>
-                  <button
-                    aria-label="Làm mới cuộc trò chuyện"
-                    onClick={resetChat}
-                    style={{
-                      background: 'rgba(255,255,255,0.9)',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '12px',
-                      color: '#495057',
-                      padding: 'clamp(5px, 1.2vw, 7px) clamp(10px, 2.5vw, 12px)',
-                      fontSize: 'clamp(11px, 2.3vw, 13px)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = '#e9ecef';
-                      e.target.style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'rgba(255,255,255,0.9)';
-                      e.target.style.transform = 'translateY(0)';
-                    }}
-                  >
-                    🔄 Làm mới
-                  </button>
-                </div>
-              )}
-              <div style={{
-                fontSize: 'clamp(11px, 2.3vw, 13px)',
-                color: input.length > 450 ? '#dc3545' : '#6c757d',
-                textAlign: 'right',
-                marginBottom: 'clamp(4px, 1vw, 6px)'
-              }}>
-                {input.length}/500
-              </div>
-              <div style={{
-                display: 'flex',
-                gap: 'clamp(4px, 1vw, 6px)',
-                flexWrap: 'wrap'
-              }}>
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[\n\t\r]/g, ' ');
-                    if (value.length <= 500) {
-                      setInput(value);
-                    }
-                  }}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Nhập tin nhắn... (tối đa 500 ký tự)"
-                  style={{
-                    flex: 1,
-                    border: `1px solid ${input.length > 450 ? '#ffc107' : '#dee2e6'}`,
-                    borderRadius: 'clamp(12px, 3vw, 16px)',
-                    padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 14px)',
-                    fontSize: 'clamp(12px, 2.5vw, 14px)',
-                    outline: 'none',
-                    transition: 'border-color 0.2s ease',
-                    minWidth: '160px'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#667eea';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#dee2e6';
-                  }}
-                />
-                <button
-                  aria-label="Gửi tin nhắn"
-                  onClick={handleSubmit}
-                  disabled={isTyping || !input.trim()}
-                  style={{
-                    background: isTyping || !input.trim() ? '#6c757d' : 'linear-gradient(135deg, #667eea, #764ba2)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 'clamp(12px, 3vw, 16px)',
-                    padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 14px)',
-                    fontSize: 'clamp(11px, 2.5vw, 14px)',
-                    cursor: isTyping || !input.trim() ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s ease',
-                    whiteSpace: 'nowrap',
-                    minWidth: 'clamp(60px, 14vw, 80px)'
-                  }}
-                >
-                  Gửi
-                </button>
+                    gap: 'clamp(3px, 0.8vw, 5px)' 
+                  }}>
+                    <button
+                      aria-label={`Gửi lại câu hỏi: ${question}`}
+                      tabIndex={0}
+                      onClick={() => handleSuggestionClick(question)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '10px',
+                        padding: 'clamp(3px, 0.8vw, 5px) clamp(6px, 1.5vw, 8px)',
+                        fontSize: 'clamp(11px, 2.3vw, 13px)',
+                        cursor: 'pointer',
+                        color: '#495057',
+                        transition: 'all 0.15s ease',
+                        whiteSpace: 'nowrap',
+                        maxWidth: 'clamp(80px, 24vw, 100px)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        lineHeight: '1.4',
+                        height: 'clamp(18px, 4.5vw, 22px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#e9ecef';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#fff';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                      title={question.endsWith('...') ? 'Nhấn để gửi lại câu hỏi đầy đủ' : question}
+                    >
+                      {question}
+                    </button>
+                    <button
+                      aria-label={`Xóa câu hỏi: ${question}`}
+                      tabIndex={0}
+                      onClick={() => handleDeleteQuestion(question)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleDeleteQuestion(question)}
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '50%',
+                        width: 'clamp(16px, 3.5vw, 20px)',
+                        height: 'clamp(16px, 3.5vw, 20px)',
+                        fontSize: 'clamp(9px, 2vw, 11px)',
+                        cursor: 'pointer',
+                        color: '#dc3545',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#dc3545';
+                        e.target.style.color = '#fff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#fff';
+                        e.target.style.color = '#dc3545';
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
+          )}
+
+          <div style={{
+            padding: 'clamp(8px, 2vw, 12px)',
+            backgroundColor: '#ffffff',
+            borderTop: previousQuestions.length === 0 ? 'none' : '1px solid #e9ecef'
+          }}>
+            {messages.length > 0 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: 'clamp(6px, 1.5vw, 8px)'
+              }}>
+                <button
+                  aria-label="Làm mới cuộc trò chuyện"
+                  onClick={resetChat}
+                  style={{
+                    background: 'rgba(255,255,255,0.9)',
+                    border: '1px solid #dee2e6',
+                    borderRadius: '12px',
+                    color: '#495057',
+                    padding: 'clamp(5px, 1.2vw, 7px) clamp(10px, 2.5vw, 12px)',
+                    fontSize: 'clamp(11px, 2.3vw, 13px)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#e9ecef';
+                    e.target.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'rgba(255,255,255,0.9)';
+                    e.target.style.transform = 'translateY(0)';
+                  }}
+                >
+                  🔄 Làm mới
+                </button>
+              </div>
+            )}
+            <div style={{
+              fontSize: 'clamp(11px, 2.3vw, 13px)',
+              color: input.length > 450 ? '#dc3545' : '#6c757d',
+              textAlign: 'right',
+              marginBottom: 'clamp(4px, 1vw, 6px)'
+            }}>
+              {input.length}/500
+            </div>
+            <div style={{ 
+              display: 'flex', 
+              gap: 'clamp(4px, 1vw, 6px)',
+              flexWrap: 'wrap' 
+            }}>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[\n\t\r]/g, ' ');
+                  if (value.length <= 500) {
+                    setInput(value);
+                  }
+                }}
+                onKeyPress={handleKeyPress}
+                placeholder="Nhập tin nhắn... (tối đa 500 ký tự)"
+                style={{
+                  flex: 1,
+                  border: `1px solid ${input.length > 450 ? '#ffc107' : '#dee2e6'}`,
+                  borderRadius: 'clamp(12px, 3vw, 16px)',
+                  padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 14px)',
+                  fontSize: 'clamp(12px, 2.5vw, 14px)',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease',
+                  minWidth: '160px'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#667eea';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = input.length > 450 ? '#ffc107' : '#dee2e6';
+                }}
+              />
+              <button
+                aria-label="Gửi tin nhắn"
+                onClick={handleSubmit}
+                disabled={isTyping || !input.trim()}
+                style={{
+                  background: isTyping || !input.trim() ? '#6c757d' : 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 'clamp(12px, 3vw, 16px)',
+                  padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 14px)',
+                  fontSize: 'clamp(12px, 2.5vw, 14px)',
+                  cursor: isTyping || !input.trim() ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
+                  minWidth: 'clamp(60px, 15vw, 80px)'
+                }}
+              >
+                Gửi
+              </button>
+            </div>
           </div>
-        )}
-        
-        <style jsx>{`
+        </div>
+      )}
+
+      <style>
+        {`
           @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -822,7 +821,7 @@ const App = () => {
           }
           
           div::-webkit-scrollbar {
-            width: 10px;
+            width: clamp(4px, 1vw, 6px);
           }
           
           div::-webkit-scrollbar-track {
@@ -838,15 +837,14 @@ const App = () => {
           div::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
           }
-          
+
           .chat-box {
             height: clamp(400px, 75vh, 520px);
           }
-          
           .chat-box.no-quick-actions {
-            height: clamp(344px, 70vh, 480px);
+            height: clamp(370px, 70vh, 480px);
           }
-          
+
           @media (max-width: 1024px) {
             .chat-box {
               height: clamp(360px, 80vh, 500px);
@@ -855,35 +853,60 @@ const App = () => {
               height: clamp(340px, 75vh, 480px);
             }
           }
-          
+
           @media (max-width: 767px) {
-            button[aria-label^="Đóng chat"], button[aria-label^="Mở chat"] {
-              bottom: 0.5vh;
+            button[aria-label="Đóng chat"], button[aria-label="Mở chat"] {
+              bottom: 1vh;
+              right: 1vw;
               width: clamp(48px, 12vw, 56px);
               height: clamp(48px, 12vw, 56px);
-              font-size: clamp(20px, 5vw, 24px);
+              fontSize: clamp(20px, 5vw, 24px);
             }
             .chat-box {
-              bottom: calc(0.5vh + clamp(48px, 12vw, 56px));
-              right: 2vw;
+              bottom: calc(1vh + clamp(48px, 12vw, 56px) + 0.5vh);
+              right: 1vw;
               width: clamp(280px, 95vw, 380px);
-              height: clamp(400px, 85vh, 460px);
+              height: clamp(340px, 85vh, 460px);
             }
             .chat-box.no-quick-actions {
-              height clamp(344px, 80vh, 440px);
-            }}
+              height: clamp(320px, 80vh, 440px);
+            }
+            div[style*="padding: clamp(8px, 2vw, 12px); background-color: #ffffff"] {
+              padding: clamp(6px, 1.5vw, 10px);
+            }
+            div[style*="marginTop: 'clamp(8px, 2vw, 12px)'"] {
+              margin-top: clamp(6px, 1.5vw, 10px);
+            }
+            p[style*="fontSize: 'clamp(14px, 2.8vw, 16px)'"] {
+              font-size: clamp(13px, 3vw, 15px);
+            }
+            button[style*="fontSize: 'clamp(12px, 2.5vw, 14px)'"] {
+              font-size: clamp(11px, 2.8vw, 13px);
+              padding: clamp(5px, 1.2vw, 7px) clamp(6px, 1.5vw, 8px);
+              min-height: clamp(28px, 6vw, 32px);
+            }
+            input[style*="fontSize: 'clamp(12px, 2.5vw, 14px)'"] {
+              font-size: clamp(11px, 2.8vw, 13px);
+              padding: clamp(5px, 1.2vw, 7px) clamp(8px, 2vw, 12px);
+              min-width: 140px;
+            }
+            button[aria-label="Gửi tin nhắn"] {
+              font-size: clamp(11px, 2.8vw, 13px);
+              padding: clamp(5px, 1.2vw, 7px) clamp(8px, 2vw, 12px);
+              min-width: clamp(56px, 14vw, 72px);
+            }
           }
-          
+
           @media (max-width: 479px) {
-            button[aria-label^="Đóng chat"], button[aria-label^="Mở chat"] {
+            button[aria-label="Đóng chat"], button[aria-label="Mở chat"] {
               bottom: 0.5vh;
-              right: 2vw;
-              width: clamp(44px, 14vw, 40px);
-              height: clamp(44px, 14vw, 40px);
-              font-size: clamp(18px, 5.5vw, 22px);
+              right: 0.5vw;
+              width: clamp(44px, 14vw, 52px);
+              height: clamp(44px, 14vw, 52px);
+              fontSize: clamp(18px, 5.5vw, 22px);
             }
             .chat-box {
-              bottom: calc(0.5vh + clamp(40px, 14vw, 48px));
+              bottom: calc(0.5vh + clamp(44px, 14vw, 52px) + 0.3vh);
               right: 0.5vw;
               width: clamp(260px, 96vw, 340px);
               height: clamp(330px, 90vh, 420px);
@@ -891,7 +914,10 @@ const App = () => {
             .chat-box.no-quick-actions {
               height: clamp(310px, 85vh, 400px);
             }
-            div[style*="padding: 'clamp(8px, 2vw, 12px)'] {
+            div[style*="flex: 1; padding: clamp(8px, 2vw, 12px)"] {
+              padding: clamp(6px, 1.5vw, 10px);
+            }
+            div[style*="padding: clamp(8px, 2vw, 12px); background-color: #ffffff"] {
               padding: clamp(6px, 1.5vw, 10px);
             }
             div[style*="marginTop: 'clamp(8px, 2vw, 12px)'"] {
@@ -901,35 +927,37 @@ const App = () => {
               font-size: clamp(12px, 3.5vw, 14px);
             }
             button[style*="fontSize: 'clamp(12px, 2.5vw, 14px)'"] {
-              font-size: clamp(11px, 3vw, 12px);
+              font-size: clamp(11px, 3vw, 13px);
               padding: clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 8px);
               min-height: clamp(26px, 5.5vw, 30px);
             }
             input[style*="fontSize: 'clamp(12px, 2.5vw, 14px)'"] {
+              font-size: clamp(11px, 3vw, 13px);
               padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
               min-width: 120px;
             }
             button[aria-label="Gửi tin nhắn"] {
+              font-size: clamp(11px, 3vw, 13px);
               padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
               min-width: clamp(52px, 14vw, 68px);
             }
-            div[style*="height: 'clamp(18px, 5vw, 22px)'"] {
+            div[style*="height: 'clamp(18px, 4.5vw, 22px)'"] {
               height: clamp(16px, 4vw, 20px);
             }
             button[style*="fontSize: 'clamp(11px, 2.3vw, 13px)'"] {
               font-size: clamp(10px, 2.8vw, 12px);
-              padding: clamp(3px, 0.8vw, 5px);
+              padding: clamp(3px, 0.8vw, 5px) clamp(5px, 1.2vw, 7px);
             }
-            min-width: 0px;
             button[style*="width: 'clamp(16px, 3.5vw, 20px)'"] {
               width: clamp(14px, 3vw, 18px);
               height: clamp(14px, 3vw, 18px);
-              font-size: clamp(8px, 1.8, 10px);
+              font-size: clamp(8px, 1.8vw, 10px);
             }
           }
-        </style>
-      </div>
-    );
-  }
+        `}
+      </style>
+    </div>
+  );
+};
 
 export default App;
