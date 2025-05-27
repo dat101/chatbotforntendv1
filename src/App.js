@@ -643,13 +643,13 @@ const App = () => {
             )}
           </div>
 
-          {previousQuestions?.length > 0 && (
+          {previousQuestions.length > 0 && (
             <div style={{
               backgroundColor: '#f8f9fa',
               borderTop: '1px solid #e9ecef'
             }}>
               <div style={{
-                padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px) clamp(2px, 0.5vw, 4px)', 
+                padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px) clamp(2px, 0.5vw, 4px)',
                 fontSize: 'clamp(11px, 2.3vw, 13px)',
                 color: '#6c757d',
                 fontWeight: 500
@@ -664,7 +664,7 @@ const App = () => {
                 maxHeight: 'clamp(35px, 10vw, 45px)',
                 overflowY: 'auto'
               }}>
-                {previousQuestions?.slice(0, 8).map((question, idx) => (
+                {previousQuestions.slice(0, 8).map((question, idx) => (
                   <div key={idx} style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
@@ -677,7 +677,7 @@ const App = () => {
                       onKeyDown={(e) => e.key === 'Enter' && handleSuggestionClick(question)}
                       style={{
                         background: '#fff',
-                        border: '#1e2e6f6',
+                        border: '1px solid #dee2e6',
                         borderRadius: '10px',
                         padding: 'clamp(3px, 0.8vw, 5px) clamp(6px, 1.5vw, 8px)',
                         fontSize: 'clamp(11px, 2.3vw, 13px)',
@@ -695,13 +695,12 @@ const App = () => {
                         flexShrink: 0
                       }}
                       onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#e9ecef';
+                        e.target.style.background = '#e9ecef';
                         e.target.style.transform = 'translateY(-1px)';
-                        e.target.style.boxShadow = '0 1px 4px';
-rgba(0,0,0,0.1)';
+                        e.target.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = '#fff';
+                        e.target.style.background = '#fff';
                         e.target.style.transform = 'translateY(0)';
                         e.target.style.boxShadow = 'none';
                       }}
@@ -710,7 +709,7 @@ rgba(0,0,0,0.1)';
                       {question}
                     </button>
                     <button
-                      aria-label="Xóa câu hỏi: ${question}"
+                      aria-label={`Xóa câu hỏi: ${question}`}
                       tabIndex={0}
                       onClick={() => handleDeleteQuestion(question)}
                       onKeyDown={(e) => e.key === 'Enter' && handleDeleteQuestion(question)}
@@ -777,7 +776,7 @@ rgba(0,0,0,0.1)';
                 style={{
                   flex: 1,
                   border: `1px solid ${input.length > 450 ? '#ffc107' : '#dee2e6'}`,
-                  borderRadius: 'clamp(12px, 3vw, 14px)',
+                  borderRadius: 'clamp(12px, 3vw, 16px)',
                   padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 14px)',
                   fontSize: 'clamp(12px, 2.5vw, 14px)',
                   outline: 'none',
