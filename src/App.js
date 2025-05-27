@@ -17,6 +17,8 @@ const App = () => {
   const messagesEndRef = useRef(null);
   const [typingStates, setTypingStates] = useState({});
   const [allUserQuestions, setAllUserQuestions] = useState([]);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const chatLogRef = useRef(null);
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000/api/chat';
   if (!process.env.REACT_APP_BACKEND_URL) {
@@ -43,6 +45,21 @@ const App = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (chatLogRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = chatLogRef.current;
+        setIsScrolled(scrollTop < scrollHeight - clientHeight - 10);
+      }
+    };
+
+    const chatLog = chatLogRef.current;
+    if (chatLog) {
+      chatLog.addEventListener('scroll', handleScroll);
+      return () => chatLog.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   const getPreviousUserQuestions = () => {
     const recentQuestions = allUserQuestions.slice(-6).reverse();
@@ -326,7 +343,7 @@ const App = () => {
             </div>
           </div>
 
-          <div role="log" aria-live="polite" style={{
+          <div ref={chatLogRef} role="log" aria-live="polite" style={{
             flex: 1,
             padding: 'clamp(8px, 2vw, 12px)',
             overflowY: 'auto',
@@ -607,7 +624,6 @@ const App = () => {
               <div style={{
                 position: 'sticky',
                 bottom: 0,
-                backgroundColor: '#f8f9fa',
                 zIndex: 10,
                 padding: 'clamp(8px, 2vw, 12px) 0',
                 display: 'flex',
@@ -617,7 +633,7 @@ const App = () => {
                   aria-label="Làm mới cuộc trò chuyện"
                   onClick={resetChat}
                   style={{
-                    background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                    background: isScrolled ? 'transparent' : 'linear-gradient(45deg, #667eea, #764ba2)',
                     border: 'none',
                     borderRadius: '12px',
                     color: 'white',
@@ -625,15 +641,18 @@ const App = () => {
                     fontSize: 'clamp(11px, 2.3vw, 13px)',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                    boxShadow: isScrolled ? 'none' : '0 2px 8px rgba(0,0,0,0.2)',
+                    backdropFilter: isScrolled ? 'blur(5px)' : 'none'
                   }}
                   onMouseEnter={(e) => {
+                    e.target.style.background = 'linear-gradient(45deg, #667eea, #764ba2)';
                     e.target.style.transform = 'translateY(-1px)';
                     e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
                   }}
                   onMouseLeave={(e) => {
+                    e.target.style.background = isScrolled ? 'transparent' : 'linear-gradient(45deg, #667eea, #764ba2)';
                     e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+                    e.target.style.boxShadow = isScrolled ? 'none' : '0 2px 8px rgba(0,0,0,0.2)';
                   }}
                 >
                   🔄 Làm mới
