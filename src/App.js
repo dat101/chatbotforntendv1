@@ -605,14 +605,13 @@ const App = () => {
             <div ref={messagesEndRef} />
             {messages.length > 0 && (
               <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: 'clamp(6px, 1.5vw, 8px)',
                 position: 'sticky',
-                bottom: '0',
+                bottom: 0,
                 backgroundColor: '#f8f9fa',
                 zIndex: 10,
-                padding: 'clamp(4px, 1vw, 6px) 0'
+                padding: 'clamp(8px, 2vw, 12px) 0',
+                display: 'flex',
+                justifyContent: 'center'
               }}>
                 <button
                   aria-label="Làm mới cuộc trò chuyện"
